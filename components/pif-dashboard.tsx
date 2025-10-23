@@ -44,12 +44,12 @@ export function PifDashboard() {
   return (
     <div className="flex h-screen bg-background">
       {/* Chat Interface - Left Side */}
-      <div className="w-2/5 border-r border-border flex flex-col">
+      <div className="w-2/5 border-r border-border flex flex-col h-screen">
         <ChatInterface document={document} setDocument={setDocument} />
       </div>
 
       {/* Document Viewer - Right Side */}
-      <div className="w-3/5 flex flex-col">
+      <div className="w-3/5 flex flex-col h-screen">
         <DocumentViewer document={document} />
       </div>
     </div>

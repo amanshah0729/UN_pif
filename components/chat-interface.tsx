@@ -117,27 +117,27 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
         <div className="space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-sm">Start a conversation to draft and refine your PIF</p>
+              <p className="text-muted-foreground text-sm">Begin by picking a country for your PIF, then use the chat to refine the document</p>
               <div className="mt-4 space-y-2">
-                <p className="text-xs text-muted-foreground">Try asking:</p>
+                <p className="text-xs text-muted-foreground">Some examples:</p>
                 <div className="flex flex-col gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setInput("Make the executive summary more concise")
+                      setInput("Kenya")
                     }}
                   >
-                    Make the executive summary more concise
+                    Kenya
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setInput("Add a risk assessment section")
+                      setInput("Pakistan")
                     }}
                   >
-                    Add a risk assessment section
+                    Pakistan
                   </Button>
                 </div>
               </div>
