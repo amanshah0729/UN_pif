@@ -6,17 +6,24 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send } from "lucide-react"
+import { Send, Loader2 } from "lucide-react"
 
 interface ChatInterfaceProps {
   document: any
   setDocument: (doc: any) => void
 }
 
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+}
+
 export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [inputValue, setInputValue] = useState("")
-  const [messages, setMessages] = useState<Array<{id: string, role: "user" | "assistant", content: string}>>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -24,27 +31,77 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
     }
   }, [messages])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim()) return
+    if (!input.trim() || isLoading) return
 
-    // Add user message
-    const userMessage = {
+    const userMessage: Message = {
       id: Date.now().toString(),
-      role: "user" as const,
-      content: inputValue
+      role: "user",
+      content: input
     }
+
     setMessages(prev => [...prev, userMessage])
+    setInput("")
+    setIsLoading(true)
 
-    // Add a simple response (no AI)
-    const assistantMessage = {
-      id: (Date.now() + 1).toString(),
-      role: "assistant" as const,
-      content: "Thank you for your message. This is a local interface without AI integration."
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content
+          }))
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to get response')
+      }
+
+      const reader = response.body?.getReader()
+      if (!reader) {
+        throw new Error('No response body')
+      }
+
+      let assistantContent = ""
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: ""
+      }
+
+      setMessages(prev => [...prev, assistantMessage])
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = new TextDecoder().decode(value)
+        assistantContent += chunk
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === assistantMessage.id 
+              ? { ...msg, content: assistantContent }
+              : msg
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error:', error)
+      const errorMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        role: "assistant",
+        content: "Sorry, I encountered an error. Please try again."
+      }
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
     }
-    setMessages(prev => [...prev, assistantMessage])
-
-    setInputValue("")
   }
 
   return (
@@ -68,7 +125,7 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setInputValue("Make the executive summary more concise")
+                      setInput("Make the executive summary more concise")
                     }}
                   >
                     Make the executive summary more concise
@@ -77,7 +134,7 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setInputValue("Add a risk assessment section")
+                      setInput("Add a risk assessment section")
                     }}
                   >
                     Add a risk assessment section
@@ -87,7 +144,7 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
             </div>
           )}
 
-          {messages.map((message) => (
+          {messages.map((message: any) => (
             <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               <div
                 className={`max-w-[85%] rounded-lg px-4 py-2 ${
@@ -108,13 +165,18 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
       <div className="border-t border-border bg-card px-6 py-4">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1"
+            disabled={isLoading}
           />
-          <Button type="submit" size="icon" disabled={!inputValue.trim()}>
-            <Send className="h-4 w-4" />
+          <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
           </Button>
         </form>
       </div>
