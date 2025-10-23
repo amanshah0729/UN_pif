@@ -6,9 +6,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Loader2 } from "lucide-react"
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
+import { Send } from "lucide-react"
 
 interface ChatInterfaceProps {
   document: any
@@ -18,28 +16,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [inputValue, setInputValue] = useState("")
-
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat" }),
-    body: {
-      document: JSON.stringify(document),
-    },
-    onFinish: (message) => {
-      // Parse AI response for document updates
-      try {
-        const content = message.parts.find((p) => p.type === "text")?.text || ""
-        if (content.includes("DOCUMENT_UPDATE:")) {
-          const jsonMatch = content.match(/DOCUMENT_UPDATE:\s*({[\s\S]*})/)
-          if (jsonMatch) {
-            const updatedDoc = JSON.parse(jsonMatch[1])
-            setDocument(updatedDoc)
-          }
-        }
-      } catch (e) {
-        console.error("Failed to parse document update:", e)
-      }
-    },
-  })
+  const [messages, setMessages] = useState<Array<{id: string, role: "user" | "assistant", content: string}>>([])
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -49,9 +26,24 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!inputValue.trim() || status === "in_progress") return
+    if (!inputValue.trim()) return
 
-    sendMessage({ text: inputValue })
+    // Add user message
+    const userMessage = {
+      id: Date.now().toString(),
+      role: "user" as const,
+      content: inputValue
+    }
+    setMessages(prev => [...prev, userMessage])
+
+    // Add a simple response (no AI)
+    const assistantMessage = {
+      id: (Date.now() + 1).toString(),
+      role: "assistant" as const,
+      content: "Thank you for your message. This is a local interface without AI integration."
+    }
+    setMessages(prev => [...prev, assistantMessage])
+
     setInputValue("")
   }
 
@@ -102,29 +94,13 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
                   message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                 }`}
               >
-                {message.parts.map((part, index) => {
-                  if (part.type === "text") {
-                    // Filter out DOCUMENT_UPDATE JSON from display
-                    const displayText = part.text.replace(/DOCUMENT_UPDATE:\s*{[\s\S]*}/, "").trim()
-                    return displayText ? (
-                      <p key={index} className="text-sm leading-relaxed whitespace-pre-wrap">
-                        {displayText}
-                      </p>
-                    ) : null
-                  }
-                  return null
-                })}
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.content}
+                </p>
               </div>
             </div>
           ))}
 
-          {status === "in_progress" && (
-            <div className="flex justify-start">
-              <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-              </div>
-            </div>
-          )}
         </div>
       </ScrollArea>
 
@@ -135,10 +111,9 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="Type your message..."
-            disabled={status === "in_progress"}
             className="flex-1"
           />
-          <Button type="submit" size="icon" disabled={!inputValue.trim() || status === "in_progress"}>
+          <Button type="submit" size="icon" disabled={!inputValue.trim()}>
             <Send className="h-4 w-4" />
           </Button>
         </form>
