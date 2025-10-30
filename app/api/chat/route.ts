@@ -32,100 +32,149 @@ Keep responses conversational, helpful, and under 2-3 sentences. Don't generate 
   return result.toTextStreamResponse();
 }
 
-// PIF Generating Agent - Creates new comprehensive PIF documents
-async function generateNewPIF(userMessage: string, currentDocument: any) {
-  const result = await generateText({
-    model: openai('gpt-4o-mini'),
-    prompt: `You are a PIF Generating Agent. Create a comprehensive UN PIF (Project Information Form) document from scratch based on this user request: "${userMessage}"
-
-Current document context:
-${currentDocument && currentDocument.title ? JSON.stringify(currentDocument, null, 2) : 'No existing document - creating new PIF'}
-
-Your task: Generate a complete, detailed PIF document with all standard sections. Make it country-specific and contextually relevant.
-
-Return ONLY a JSON object with this exact structure (no markdown, no code blocks, just pure JSON):
-{
-  "title": "GEF8 Project Information Form - [Country Name]",
-  "sections": [
-    {
-      "id": "executive-summary",
-      "title": "Executive Summary",
-      "content": "Comprehensive executive summary with project overview, objectives, and expected impact..."
-    },
-    {
-      "id": "project-objectives", 
-      "title": "Project Objectives",
-      "content": "Detailed primary and specific objectives with measurable targets..."
-    },
-    {
-      "id": "implementation-strategy",
-      "title": "Implementation Strategy", 
-      "content": "Detailed implementation phases, activities, timeline, and approach..."
-    },
-    {
-      "id": "budget",
-      "title": "Budget and Resources",
-      "content": "Comprehensive budget breakdown with detailed cost categories and financing sources..."
-    },
-    {
-      "id": "expected-outcomes",
-      "title": "Expected Outcomes",
-      "content": "Quantitative and qualitative outcomes with specific indicators and targets..."
-    },
-    {
-      "id": "risk-assessment",
-      "title": "Risk Assessment",
-      "content": "Detailed risk matrix with identified risks, mitigation strategies, and monitoring..."
-    },
-    {
-      "id": "monitoring-evaluation",
-      "title": "Monitoring and Evaluation",
-      "content": "Comprehensive M&E framework with indicators, evaluation schedule, and methodology..."
-    },
-    {
-      "id": "stakeholder-analysis",
-      "title": "Stakeholder Analysis",
-      "content": "Detailed stakeholder mapping with engagement strategies and roles..."
-    },
-    {
-      "id": "sustainability-plan",
-      "title": "Sustainability Plan",
-      "content": "Comprehensive sustainability strategy covering institutional, financial, technical, and social aspects..."
-    },
-    {
-      "id": "environmental-safeguards",
-      "title": "Environmental and Social Safeguards",
-      "content": "Detailed environmental and social safeguards with compliance framework..."
-    }
-  ]
+// --- Subagent helpers for new PIF format ---
+function extractCountryFromMessage(userMessage: string): string | null {
+  const countries = [
+    'kenya','pakistan','cuba','india','bangladesh','nigeria','ethiopia','tanzania','uganda','ghana','rwanda'
+    // ... add more as needed
+  ];
+  const lowerMessage = userMessage.toLowerCase();
+  return countries.find((c) => lowerMessage.includes(c)) || null;
 }
 
-Make the content comprehensive, professional, and similar to real GEF PIFs. Each section should be detailed and substantive.
-
-IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, no additional text.`,
+async function generateSectionParagraph({sectionTitle, instructions, country}: {sectionTitle:string, instructions:string, country:string}) {
+  const result = await generateText({
+    model: openai('gpt-4o-mini'),
+    prompt: `You are drafting a section for a UN Project Information Form (PIF).\n\nSection: ${sectionTitle}\nCountry: ${country}\n\n${instructions}\n\nReturn a professional, concise, and informative essay with a minimum of 400 words written in the style of international project documents.
+    Keep the structure of the document the exact same. Use only these sources: – UNFCCC reports portal (BTR/NC/BUR/NIR for the country) https://www.thegef.org/projects-operations/database?f%5B0%5D=capacity_building_initiative_for_transparency%3A2071&f%5B1%5D=implementing_agencies%3A605 – ICAT (climateactiontransparency.org) country pages/reports https://unfccc.int/reports – PATPA (transparency-partnership.net) knowledge products/Good Practice DB https://climateactiontransparency.org – GEF/CBIT documents on thegef.org https://transparency-partnership.net/ Do not use any other sources. If required info is missing, say so explicitly and point to the specific PDF/URL within these sites where it likely exists. No hallucinations. Follow the PIF template’s wording, length limits, and tone for each section.
+    
+    `,
   });
+  return result.text.trim();
+}
 
-  try {
-    // Clean the response to remove any markdown formatting
-    let cleanedText = result.text.trim();
-    
-    // Remove markdown code blocks if present
-    if (cleanedText.startsWith('```json')) {
-      cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (cleanedText.startsWith('```')) {
-      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
-    
-    // Remove any leading/trailing whitespace
-    cleanedText = cleanedText.trim();
-    
-    console.log('PIF Generating Agent - Cleaned text:', cleanedText.substring(0, 200) + '...');
-    return JSON.parse(cleanedText);
-  } catch (error) {
-    console.error('Error parsing PIF generation JSON:', error);
-    console.error('Raw text:', result.text.substring(0, 500));
-    return null;
+async function sectionClimateTransparency(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: `Climate Transparency in ${country}`,
+    instructions: `Summarize the status, context, recent progress, and remaining challenges related to climate transparency and the transparency framework in ${country}. Reference NDC/Enhanced Transparency Framework implementation where possible.`,
+    country,
+  });
+}
+
+async function sectionUNFCCReporting(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Official Reporting to the UNFCCC',
+    instructions: `Describe ${country}'s history and status regarding official reporting to the UNFCCC, such as BURs, NCs, Enhanced Transparency Reports, and related official requirements or achievements. Highlight any notable submission years, gaps, or successes.`,
+    country,
+  });
+}
+
+async function sectionOtherBaselines(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Other Baseline Initiatives',
+    instructions: `Compose a paragraph on ongoing or recent baseline initiatives related to climate or environmental monitoring, MRV (measurement, reporting, verification), development partner support, and other national efforts relevant to transparency in ${country}. Mention programs or partnerships if possible.`,
+    country,
+  });
+}
+
+async function sectionKeyBarriers(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Key Barriers',
+    instructions: `Describe the main barriers and challenges to climate transparency, UNFCCC reporting, GHG inventory improvements, and overall climate policy implementation in ${country}. Be specific and reference technical, institutional, financial, and capacity-related barriers, citing from the suggested sources when possible.`,
+    country,
+  });
+}
+
+async function sectionGHGInventory(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'GHG Inventory',
+    instructions: `Summarize the status, structure, recent progress and remaining needs for national GHG inventory and reporting in ${country}. Reference the latest BTR, BUR or NC submissions, inventory methodologies, sectors included, missing coverage, and capacity gaps as described in suggested documents.`,
+    country,
+  });
+}
+
+async function sectionAdaptationVulnerability(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Adaptation and Vulnerability',
+    instructions: `Write a section on how adaptation and vulnerability issues are tracked, reported, and integrated in ${country}'s climate planning. Note institutional arrangements, monitoring tools, capacity, and any difficulties in adaptation reporting.`,
+    country,
+  });
+}
+
+async function sectionNDCTracking(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'NDC Tracking',
+    instructions: `Discuss the frameworks, MRV systems and institutional arrangements for monitoring and tracking ${country}'s Nationally Determined Contribution (NDC) progress. Reference legal mandates, digital tools, and periodic updates or progress gaps.`,
+    country,
+  });
+}
+
+async function sectionSupportNeededReceived(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Support Needed and Received',
+    instructions: `Describe the type and scope of international support received by ${country} related to climate transparency, NDC tracking, UNFCCC reporting, and MRV, as well as remaining needs for technical, financial, or capacity-building support. Cite examples of support from GEF/CBIT, ICAT, PATPA, or UNFCCC processes, noting gaps and recent projects.`,
+    country,
+  });
+}
+
+async function sectionInstitutionalFramework(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'Institutional Framework for Climate Action',
+    instructions: `Provide a thorough description of the committees, ministries, agencies and oversight bodies that coordinate climate action in ${country}, especially in transparency, reporting, NDC, and GHG inventory fields. Focus on governance structure, coordination mechanisms, and recent reforms if any.`,
+    country,
+  });
+}
+
+async function sectionNationalPolicyFramework(country: string) {
+  return generateSectionParagraph({
+    sectionTitle: 'National Policy Framework',
+    instructions: `Describe the main national climate policy and legal frameworks in ${country}, referencing national climate change acts, long-term strategies, and any climate mainstreaming efforts in sectoral policies. Highlight gaps noted in UNFCCC or donor reporting.`,
+    country,
+  });
+}
+
+// PIF Generating Agent - Creates new comprehensive PIF documents
+async function generateNewPIF(userMessage: string, currentDocument: any) {
+  // Prefer country from shouldProcessDocument fallback logic
+  let country = extractCountryFromMessage(userMessage);
+  if (!country && currentDocument && currentDocument.title) {
+    // Try to extract from current document title if possible
+    const match = currentDocument.title.match(/GEF8 Project Information Form - ([\w ]+)/);
+    country = match ? match[1] : null;
   }
+  country = country ? country.charAt(0).toUpperCase() + country.slice(1) : 'Unknown Country';
+
+  // Call each sub-agent for all required sections
+  const sections = await Promise.all([
+    sectionClimateTransparency(country),
+    sectionUNFCCReporting(country),
+    sectionOtherBaselines(country),
+    sectionKeyBarriers(country),
+    sectionGHGInventory(country),
+    sectionAdaptationVulnerability(country),
+    sectionNDCTracking(country),
+    sectionSupportNeededReceived(country),
+    sectionInstitutionalFramework(country),
+    sectionNationalPolicyFramework(country)
+  ]);
+
+  const sectionList = [
+    { id: 'climate-transparency', title: `Climate Transparency in ${country}`, content: sections[0] },
+    { id: 'official-unfccc-reporting', title: 'Official Reporting to the UNFCCC', content: sections[1] },
+    { id: 'other-baseline-initiatives', title: 'Other Baseline Initiatives', content: sections[2] },
+    { id: 'key-barriers', title: 'Key Barriers', content: sections[3] },
+    { id: 'ghg-inventory', title: 'GHG Inventory', content: sections[4] },
+    { id: 'adaptation-vulnerability', title: 'Adaptation and Vulnerability', content: sections[5] },
+    { id: 'ndc-tracking', title: 'NDC Tracking', content: sections[6] },
+    { id: 'support-needed-received', title: 'Support Needed and Received', content: sections[7] },
+    { id: 'institutional-framework', title: 'Institutional Framework for Climate Action', content: sections[8] },
+    { id: 'national-policy-framework', title: 'National Policy Framework', content: sections[9] },
+  ];
+
+  return {
+    title: `GEF8 Project Information Form - ${country}`,
+    sections: sectionList,
+  };
 }
 
 // PIF Editing Agent - Modifies existing PIF documents
