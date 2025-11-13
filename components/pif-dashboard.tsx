@@ -5,9 +5,14 @@ import { ChatInterface } from "./chat-interface"
 import { DocumentViewer } from "./document-viewer"
 import { convertProseMirrorToDocument, convertDocumentToProseMirror } from "@/lib/document-converter"
 
+interface Document {
+  title: string
+  sections: Array<{ id: string; title: string; content: string }>
+}
+
 export function PifDashboard() {
   const [editorContent, setEditorContent] = useState<any | null>(null)
-  const [document, setDocument] = useState({
+  const [document, setDocument] = useState<Document>({
     title: "Project Information Form",
     sections: []
   })
