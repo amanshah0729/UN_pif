@@ -1,5 +1,8 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, generateText } from 'ai';
+import { getCountryByName } from '@/lib/countries';
+import fs from 'fs';
+import path from 'path';
 
 // Chat Agent - Handles conversational responses
 async function getChatResponse(messages: any[], document: any) {
@@ -40,6 +43,34 @@ function extractCountryFromMessage(userMessage: string): string | null {
   ];
   const lowerMessage = userMessage.toLowerCase();
   return countries.find((c) => lowerMessage.includes(c)) || null;
+}
+
+const SECTION_KEYWORDS: Record<string, string> = {
+  ghg: 'GHG',
+  'ghg inventory': 'GHG',
+  climate: 'Climate',
+  'climate transparency': 'Climate',
+  adaptation: 'Adaptation',
+  vulnerability: 'Adaptation',
+  'ndc tracking': 'NDC',
+  ndc: 'NDC',
+  'institutional framework': 'Institutional Framework',
+  'national policy': 'National Policy',
+  'support needed': 'Support Needed',
+  'support received': 'Support Needed',
+  'key barriers': 'Key Barriers',
+  barriers: 'Key Barriers',
+  'baseline initiatives': 'Other Baseline Initiatives',
+};
+
+function extractSectionFromMessage(userMessage: string): string | null {
+  const lowerMessage = userMessage.toLowerCase();
+  for (const [keyword, sectionKey] of Object.entries(SECTION_KEYWORDS)) {
+    if (lowerMessage.includes(keyword)) {
+      return sectionKey;
+    }
+  }
+  return null;
 }
 
 async function generateSectionParagraph({sectionTitle, instructions, country}: {sectionTitle:string, instructions:string, country:string}) {
@@ -133,48 +164,158 @@ async function sectionNationalPolicyFramework(country: string) {
   });
 }
 
-// PIF Generating Agent - Creates new comprehensive PIF documents
-async function generateNewPIF(userMessage: string, currentDocument: any) {
-  // Prefer country from shouldProcessDocument fallback logic
+// Helper function to map PROMPT text to section keys
+function mapPromptToSection(promptText: string): string | null {
+  const lowerPrompt = promptText.toLowerCase();
+  
+  // Map keywords in prompts to section keys
+  if (lowerPrompt.includes('ghg') || lowerPrompt.includes('inventory') || lowerPrompt.includes('emissions')) {
+    return 'GHG';
+  }
+  if (lowerPrompt.includes('climate transparency') || lowerPrompt.includes('transparency framework')) {
+    return 'Climate';
+  }
+  if (lowerPrompt.includes('adaptation') || lowerPrompt.includes('vulnerability')) {
+    return 'Adaptation';
+  }
+  if (lowerPrompt.includes('ndc') || lowerPrompt.includes('nationally determined contribution')) {
+    return 'NDC';
+  }
+  if (lowerPrompt.includes('institutional') || lowerPrompt.includes('ministries') || lowerPrompt.includes('agencies')) {
+    return 'Institutional Framework';
+  }
+  if (lowerPrompt.includes('national policy') || lowerPrompt.includes('policy framework') || lowerPrompt.includes('climate change strategy')) {
+    return 'National Policy';
+  }
+  if (lowerPrompt.includes('support needed') || lowerPrompt.includes('support received') || lowerPrompt.includes('capacity-building support')) {
+    return 'Support Needed and Received';
+  }
+  if (lowerPrompt.includes('barrier') || lowerPrompt.includes('challenge')) {
+    return 'Key Barriers';
+  }
+  if (lowerPrompt.includes('baseline') || lowerPrompt.includes('initiative')) {
+    return 'Other Baseline Initiatives';
+  }
+  
+  return null;
+}
+
+// Helper function to recursively replace placeholders in ProseMirror JSON
+function replacePlaceholdersInNode(node: any, country: string, countryData: any): any {
+  if (!node) return node;
+
+  // Create a deep copy
+  const newNode = JSON.parse(JSON.stringify(node));
+
+  // Replace text content if it exists
+  if (newNode.type === 'text' && newNode.text) {
+    let text = newNode.text;
+
+    // Replace [Country] with actual country name
+    text = text.replace(/\[Country\]/g, country);
+
+    // Replace section-specific placeholders with database content
+    if (countryData?.sections) {
+      const sections = countryData.sections as Record<string, unknown>;
+      
+      // Map section keys to their content
+      const sectionMap: Record<string, string> = {
+        'GHG': formatSectionContent(sections['GHG']),
+        'Climate': formatSectionContent(sections['Climate']),
+        'Adaptation': formatSectionContent(sections['Adaptation']),
+        'NDC': formatSectionContent(sections['NDC']),
+        'Institutional Framework': formatSectionContent(sections['Institutional Framework']),
+        'National Policy': formatSectionContent(sections['National Policy']),
+        'Support Needed and Received': formatSectionContent(sections['Support Needed and Received']),
+        'Key Barriers': formatSectionContent(sections['Key Barriers']),
+        'Other Baseline Initiatives': formatSectionContent(sections['Other Baseline Initiatives']),
+      };
+
+      // Handle PROMPT: placeholders - try to map to sections
+      if (text.includes('PROMPT:')) {
+        const sectionKey = mapPromptToSection(text);
+        if (sectionKey && sectionMap[sectionKey] && sectionMap[sectionKey] !== 'No content available.') {
+          // Replace the entire PROMPT line with the section content
+          text = text.replace(/PROMPT:.*$/gm, sectionMap[sectionKey]);
+        }
+      }
+
+      // Replace word count placeholders like [350 words] or [XXX words] with section content if available
+      // This is more aggressive - you might want to refine this
+      const wordCountPattern = /\[(\d+|XXX)\s+words?\]/gi;
+      const wordCountMatch = text.match(wordCountPattern);
+      if (wordCountMatch) {
+        // Try to find a nearby section context
+        const sectionKey = mapPromptToSection(text);
+        if (sectionKey && sectionMap[sectionKey] && sectionMap[sectionKey] !== 'No content available.') {
+          text = text.replace(wordCountPattern, sectionMap[sectionKey]);
+        }
+      }
+
+      // Replace generic placeholders like "[...]" or "[…]" only if we have nearby context
+      // Don't replace all of them blindly
+      if (text.match(/\[…\]|\[\.\.\.\]|\[\.\.\.\.\]/)) {
+        const sectionKey = mapPromptToSection(text);
+        if (sectionKey && sectionMap[sectionKey] && sectionMap[sectionKey] !== 'No content available.') {
+          text = text.replace(/\[…\]|\[\.\.\.\]|\[\.\.\.\.\]/g, sectionMap[sectionKey]);
+        } else {
+          // If no context, just remove the placeholder
+          text = text.replace(/\[…\]|\[\.\.\.\]|\[\.\.\.\.\]/g, '');
+        }
+      }
+    } else {
+      // Even without country data, clean up some placeholders
+      text = text.replace(/\[Country\]/g, country);
+      // Remove word count placeholders but keep structure
+      text = text.replace(/\[(\d+|XXX)\s+words?\]/gi, '');
+    }
+
+    newNode.text = text;
+  }
+
+  // Recursively process children
+  if (newNode.content && Array.isArray(newNode.content)) {
+    newNode.content = newNode.content.map((child: any) => 
+      replacePlaceholdersInNode(child, country, countryData)
+    );
+  }
+
+  return newNode;
+}
+
+// PIF Generating Agent - Creates new PIF documents from template
+async function generateNewPIF(userMessage: string, currentDocument: any, countryData: any = null) {
+  // Extract country name
   let country = extractCountryFromMessage(userMessage);
   if (!country && currentDocument && currentDocument.title) {
-    // Try to extract from current document title if possible
     const match = currentDocument.title.match(/GEF8 Project Information Form - ([\w ]+)/);
     country = match ? match[1] : null;
   }
   country = country ? country.charAt(0).toUpperCase() + country.slice(1) : 'Unknown Country';
 
-  // Call each sub-agent for all required sections
-  const sections = await Promise.all([
-    sectionClimateTransparency(country),
-    sectionUNFCCReporting(country),
-    sectionOtherBaselines(country),
-    sectionKeyBarriers(country),
-    sectionGHGInventory(country),
-    sectionAdaptationVulnerability(country),
-    sectionNDCTracking(country),
-    sectionSupportNeededReceived(country),
-    sectionInstitutionalFramework(country),
-    sectionNationalPolicyFramework(country)
-  ]);
+  // Load the template JSON
+  const templatePath = path.join(process.cwd(), 'public', 'pif-template.json');
+  let template: any;
+  
+  try {
+    const templateContent = fs.readFileSync(templatePath, 'utf-8');
+    template = JSON.parse(templateContent);
+  } catch (error) {
+    console.error('Error loading template:', error);
+    throw new Error('Failed to load PIF template');
+  }
 
-  const sectionList = [
-    { id: 'climate-transparency', title: `Climate Transparency in ${country}`, content: sections[0] },
-    { id: 'official-unfccc-reporting', title: 'Official Reporting to the UNFCCC', content: sections[1] },
-    { id: 'other-baseline-initiatives', title: 'Other Baseline Initiatives', content: sections[2] },
-    { id: 'key-barriers', title: 'Key Barriers', content: sections[3] },
-    { id: 'ghg-inventory', title: 'GHG Inventory', content: sections[4] },
-    { id: 'adaptation-vulnerability', title: 'Adaptation and Vulnerability', content: sections[5] },
-    { id: 'ndc-tracking', title: 'NDC Tracking', content: sections[6] },
-    { id: 'support-needed-received', title: 'Support Needed and Received', content: sections[7] },
-    { id: 'institutional-framework', title: 'Institutional Framework for Climate Action', content: sections[8] },
-    { id: 'national-policy-framework', title: 'National Policy Framework', content: sections[9] },
-  ];
+  // Replace placeholders in the template
+  const filledTemplate = replacePlaceholdersInNode(template, country, countryData);
 
-  return {
-    title: `GEF8 Project Information Form - ${country}`,
-    sections: sectionList,
-  };
+  // Convert back to document format for compatibility
+  const { convertProseMirrorToDocument } = await import('@/lib/document-converter');
+  const document = convertProseMirrorToDocument(filledTemplate);
+  
+  // Update title with country name
+  document.title = `GEF-8 PROJECT IDENTIFICATION FORM (PIF) - ${country}`;
+
+  return document;
 }
 
 // PIF Editing Agent - Modifies existing PIF documents
@@ -269,6 +410,8 @@ async function shouldProcessDocument(userMessage: string, currentDocument: any):
   shouldProcess: boolean; 
   action: 'generate' | 'edit' | 'none';
   country?: string; 
+  section?: string | null;
+  needsDatabase?: boolean;
   reason?: string 
 }> {
   const result = await generateText({
@@ -282,19 +425,25 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
   "shouldProcess": boolean,
   "action": "generate" | "edit" | "none",
   "country": "country name if mentioned" | null,
+  "section": "specific section identifier (e.g., GHG) if the user wants a specific section" | null,
+  "needsDatabase": boolean,
   "reason": "brief explanation of decision"
 }
 
 DECISION LOGIC:
-- "generate": Use when creating a NEW PIF document (no existing document OR user explicitly wants a new one)
-- "edit": Use when MODIFYING an existing PIF document (document exists AND user wants changes)
-- "none": Use for general questions, explanations, greetings, or system questions
+- "generate": Use when creating a NEW PIF document (no existing document OR user explicitly wants a new one).
+- "edit": Use when MODIFYING an existing PIF document (document exists AND user wants changes).
+- "none": Use for general chat where no document work is required.
+- Set "needsDatabase" to true when the user is asking about an existing country or section that should be retrieved from the database before continuing. Example triggers: "Show me Rwanda", "What's in the Rwanda GHG section", "Give me the country data for Kenya".
+- If "needsDatabase" is true, ensure you fill "country", and provide "section" when the request is targeting a specific section.
 
 Examples:
 - "Create a PIF for Kenya" + no document = generate
 - "Create a PIF for Kenya" + existing document = generate (new document)
 - "Update the budget section" + existing document = edit
 - "Make the objectives more specific" + existing document = edit
+- "What information do we have for Rwanda?" = needsDatabase true
+- "Show me the Rwanda GHG section" = needsDatabase true with section "GHG"
 - "What is a PIF?" = none
 - "Hello" = none
 
@@ -325,6 +474,7 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
     const lowerMessage = userMessage.toLowerCase();
     const countries = ['kenya', 'pakistan', 'cuba', 'india', 'bangladesh', 'nigeria', 'ethiopia', 'tanzania', 'uganda', 'ghana', 'rwanda'];
     const mentionedCountry = countries.find(country => lowerMessage.includes(country));
+    const detectedSection = extractSectionFromMessage(userMessage);
     
     const pifKeywords = ['create', 'make', 'generate', 'draft', 'write', 'pif', 'project information form'];
     const editKeywords = ['update', 'modify', 'change', 'edit', 'revise', 'improve', 'add', 'remove'];
@@ -337,6 +487,8 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
         shouldProcess: true, 
         action: 'generate', 
         country: mentionedCountry, 
+        section: detectedSection,
+        needsDatabase: false,
         reason: 'Fallback detection: PIF request with country' 
       };
     }
@@ -346,6 +498,8 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
         shouldProcess: true, 
         action: 'edit', 
         country: mentionedCountry, 
+        section: detectedSection,
+        needsDatabase: false,
         reason: 'Fallback detection: Edit request with existing document' 
       };
     }
@@ -353,14 +507,32 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
     // More lenient fallback - if any country is mentioned, assume PIF generation
     if (mentionedCountry) {
       return { 
-        shouldProcess: true, 
-        action: 'generate', 
+        shouldProcess: false, 
+        action: 'none', 
         country: mentionedCountry, 
-        reason: 'Fallback detection: Country mentioned' 
+        section: detectedSection,
+        needsDatabase: true,
+        reason: 'Fallback detection: Country mentioned - needs database lookup' 
       };
     }
     
-    return { shouldProcess: false, action: 'none', reason: 'Error parsing decision - using fallback' };
+    return { shouldProcess: false, action: 'none', needsDatabase: false, section: detectedSection ?? null, reason: 'Error parsing decision - using fallback' };
+  }
+}
+
+function formatSectionContent(content: unknown): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (content === null || content === undefined) {
+    return 'No content available.';
+  }
+
+  try {
+    return JSON.stringify(content, null, 2);
+  } catch {
+    return String(content);
   }
 }
 
@@ -374,11 +546,103 @@ export async function POST(req: Request) {
     const decision = await shouldProcessDocument(lastMessage.content, document);
     console.log('Decision:', decision);
 
+    const messageCountry = extractCountryFromMessage(lastMessage.content);
+    const sectionFromDecision = decision.section || null;
+    const sectionKey = sectionFromDecision || extractSectionFromMessage(lastMessage.content);
+    let countryData = null;
+    let sectionContent: unknown = null;
+    let countryLookupError: string | null = null;
+    const normalizedCountry = decision.country ? decision.country.charAt(0).toUpperCase() + decision.country.slice(1) : null;
+
+    if (decision.country || decision.needsDatabase) {
+      const lookupCountry = decision.country || messageCountry;
+      if (lookupCountry) {
+        const { country, error } = await getCountryByName(lookupCountry);
+        if (error) {
+          console.error('Country lookup failed:', error);
+          countryLookupError = error.message;
+        } else {
+          countryData = country;
+          if (country && sectionKey) {
+            const sections = (country.sections ?? {}) as Record<string, unknown>;
+            sectionContent = sections[sectionKey] ?? null;
+          }
+        }
+      } else {
+        countryLookupError = 'No recognizable country provided for lookup.';
+      }
+    }
+
+    if (decision.needsDatabase) {
+      const messagesToSend: { role: 'assistant'; content: string }[] = [];
+      const fallbackCountry = decision.country || messageCountry;
+      const displayCountry =
+        countryData?.name ||
+        normalizedCountry ||
+        ( fallbackCountry
+          ? fallbackCountry.charAt(0).toUpperCase() + fallbackCountry.slice(1)
+          : 'the requested country');
+
+      messagesToSend.push({
+        role: 'assistant',
+        content: `Let me check the database for ${displayCountry}...`,
+      });
+
+      if (countryLookupError) {
+        messagesToSend.push({
+          role: 'assistant',
+          content: `I couldn’t retrieve data due to an error: ${countryLookupError}`,
+        });
+      } else if (!countryData) {
+        messagesToSend.push({
+          role: 'assistant',
+          content: `I searched the database but couldn’t find any records for ${displayCountry}.`,
+        });
+      } else if (sectionKey && sectionContent) {
+        messagesToSend.push({
+          role: 'assistant',
+          content: `Here’s the latest information for the ${sectionKey} section in ${countryData.name}:\n\n${formatSectionContent(sectionContent)}`,
+        });
+      } else if (sectionKey && !sectionContent) {
+        messagesToSend.push({
+          role: 'assistant',
+          content: `I checked ${countryData.name}, but the ${sectionKey} section is currently empty.`,
+        });
+      } else {
+        const sections = (countryData.sections ?? {}) as Record<string, unknown>;
+        if (sections && Object.keys(sections).length > 0) {
+          const formattedSections = Object.entries(sections)
+            .map(([key, value]) => `**${key}**\n${formatSectionContent(value)}`)
+            .join('\n\n');
+          messagesToSend.push({
+            role: 'assistant',
+            content: `Here are the sections I found for ${countryData.name}:\n\n${formattedSections}`,
+          });
+        } else {
+          messagesToSend.push({
+            role: 'assistant',
+            content: `I found ${countryData.name}, but there aren’t any sections stored yet.`,
+          });
+        }
+      }
+
+      return Response.json({
+        type: 'database_lookup',
+        messages: messagesToSend,
+        countryContext: {
+          country: countryData,
+          sectionKey,
+          sectionContent,
+          error: countryLookupError,
+        },
+      });
+    }
+
     if (decision.shouldProcess) {
       if (decision.action === 'generate') {
         console.log('PIF Generation triggered for:', decision);
-        // Use PIF Generating Agent
-        const newDocument = await generateNewPIF(lastMessage.content, document);
+        // Use PIF Generating Agent with country data from database
+        const newDocument = await generateNewPIF(lastMessage.content, document, countryData);
         
         if (newDocument) {
           console.log('PIF generated successfully');
@@ -386,7 +650,13 @@ export async function POST(req: Request) {
             type: 'document_update',
             document: newDocument,
             decision: decision,
-            agent: 'generating'
+            agent: 'generating',
+            countryContext: {
+              country: countryData,
+              sectionKey,
+              sectionContent,
+              error: countryLookupError,
+            },
           });
         } else {
           console.log('PIF generation failed');
@@ -402,7 +672,13 @@ export async function POST(req: Request) {
             type: 'document_update',
             document: editedDocument,
             decision: decision,
-            agent: 'editing'
+            agent: 'editing',
+            countryContext: {
+              country: countryData,
+              sectionKey,
+              sectionContent,
+              error: countryLookupError,
+            },
           });
         } else {
           console.log('PIF editing failed');

@@ -75,7 +75,24 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
         // Handle document update response
         const data = await response.json()
         
-        if (data.type === 'document_update') {
+        if (data.type === 'database_lookup') {
+          const lookupMessages = Array.isArray(data.messages) ? data.messages : []
+          if (lookupMessages.length > 0) {
+            const newMessages: Message[] = lookupMessages.map((msg: any, index: number) => ({
+              id: (Date.now() + index + 1).toString(),
+              role: msg.role === 'assistant' ? 'assistant' : 'assistant',
+              content: msg.content ?? ''
+            }))
+            setMessages(prev => [...prev, ...newMessages])
+          } else {
+            const fallbackMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: "I checked the database but didn't receive any information."
+            }
+            setMessages(prev => [...prev, fallbackMessage])
+          }
+        } else if (data.type === 'document_update') {
           // Show loading message for document processing
           setIsGeneratingDocument(true)
           const loadingMessage: Message = {
