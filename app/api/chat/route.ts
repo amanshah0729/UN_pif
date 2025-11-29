@@ -1,6 +1,8 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, generateText } from 'ai';
 import { getCountryByName } from '@/lib/countries';
+import { supabase } from '@/lib/supabaseClient';
+import { extractText } from 'unpdf';
 import fs from 'fs';
 import path from 'path';
 
@@ -283,8 +285,262 @@ function replacePlaceholdersInNode(node: any, country: string, countryData: any)
   return newNode;
 }
 
+// Section names mapping (matching the 10 PIF sections)
+const SECTION_NAMES = [
+  'GHG Inventory',
+  'Climate Transparency',
+  'Adaptation and Vulnerability',
+  'NDC Tracking',
+  'Institutional Framework for Climate Action',
+  'National Policy Framework',
+  'Support Needed and Received',
+  'Key Barriers',
+  'Other Baseline Initiatives',
+  'Official Reporting to the UNFCCC'
+];
+
+// Extract section-specific content using AI subagent
+async function extractSectionContent(
+  pdfText: string,
+  sectionName: string,
+  docType: string,
+  country: string
+): Promise<string> {
+  const result = await generateText({
+    model: openai('gpt-4o-mini'),
+    prompt: `You are extracting information for the "${sectionName}" section of a PIF document.
+
+Document Type: ${docType}
+Country: ${country}
+
+Full document content:
+${pdfText.substring(0, 100000)} ${pdfText.length > 100000 ? '[... document truncated for length ...]' : ''}
+
+Extract ALL relevant information from this document that would be useful for drafting the "${sectionName}" section of a Project Information Form (PIF).
+
+Focus on:
+- Specific facts, data, metrics, and numbers
+- Dates and timeframes
+- Institutional names, structures, and arrangements
+- Policy references and legal frameworks
+- Challenges, gaps, or barriers mentioned
+- Programs, initiatives, or partnerships
+- Capacity needs or support received
+- Any other relevant details
+
+Return ONLY the extracted information as plain text. Be thorough and comprehensive - extract everything relevant, even if it seems minor. Do not summarize or paraphrase - extract the actual information from the document.`,
+  });
+  
+  return result.text.trim();
+}
+
+// Parse document and extract content for all 10 sections using subagents
+async function parseDocumentAndExtractSections(
+  pdfText: string,
+  docType: string,
+  country: string
+): Promise<Record<string, string>> {
+  const extractedSections: Record<string, string> = {};
+  
+  // Run all 10 subagents in parallel for speed
+  const extractionPromises = SECTION_NAMES.map(async (sectionName) => {
+    try {
+      const content = await extractSectionContent(pdfText, sectionName, docType, country);
+      return { sectionName, content };
+    } catch (error) {
+      console.error(`Error extracting ${sectionName}:`, error);
+      return { sectionName, content: '' };
+    }
+  });
+  
+  const results = await Promise.all(extractionPromises);
+  
+  // Build the extracted sections object
+  results.forEach(({ sectionName, content }) => {
+    if (content && content.trim().length > 0) {
+      extractedSections[sectionName] = content;
+    }
+  });
+  
+  return extractedSections;
+}
+
+// Update country database with extracted section documents
+async function updateCountrySections(
+  countryName: string,
+  docType: string,
+  extractedSections: Record<string, string>
+): Promise<void> {
+  // Get or create country record
+  let { country, error } = await getCountryByName(countryName);
+  
+  if (error || !country) {
+    // Create new country record
+    const { data: newCountry, error: createError } = await supabase
+      .from('countries')
+      .insert({
+        name: countryName,
+        sections: { sections: [] }
+      })
+      .select()
+      .single();
+    
+    if (createError || !newCountry) {
+      console.error('Error creating country:', createError);
+      throw new Error(`Failed to create country: ${createError?.message || 'Unknown error'}`);
+    }
+    
+    country = newCountry;
+  }
+  
+  if (!country) {
+    throw new Error('Failed to get or create country record');
+  }
+  
+  // Get existing sections structure
+  const existingData = country.sections as { sections?: Array<{ name: string; documents: Array<{ doc_type: string; extracted_text: string }> }> } | null;
+  const sectionsArray = existingData?.sections || [];
+  
+  // Update each section with new document
+  SECTION_NAMES.forEach((sectionName) => {
+    const extractedText = extractedSections[sectionName];
+    
+    if (!extractedText || extractedText.trim().length === 0) {
+      return; // Skip sections with no extracted content
+    }
+    
+    // Find existing section or create new one
+    let section = sectionsArray.find(s => s.name === sectionName);
+    
+    if (!section) {
+      // Create new section
+      section = {
+        name: sectionName,
+        documents: []
+      };
+      sectionsArray.push(section);
+    }
+    
+    // Append new document to section
+    section.documents.push({
+      doc_type: docType,
+      extracted_text: extractedText
+    });
+  });
+  
+  // Update country record with new sections structure
+  const { error: updateError } = await supabase
+    .from('countries')
+    .update({
+      sections: { sections: sectionsArray }
+    })
+    .eq('id', country.id);
+  
+  if (updateError) {
+    console.error('Error updating country sections:', updateError);
+    throw new Error(`Failed to update country sections: ${updateError.message}`);
+  }
+}
+
+// Process uploaded files: parse and extract sections (no storage needed)
+async function processUploadedFiles(files: File[], fileTypes: string[], countryData: any = null): Promise<any[]> {
+  const processedFiles: any[] = [];
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const fileType = fileTypes[i] || 'Other';
+    
+    if (!file) continue;
+    
+    try {
+      // Convert File to ArrayBuffer for parsing
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Parse file content based on type
+      let pdfText = '';
+      
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+        // Parse PDF using unpdf (same as working project)
+        try {
+          const { text } = await extractText(
+            new Uint8Array(arrayBuffer),
+            { mergePages: true }
+          );
+          pdfText = text;
+        } catch (pdfError) {
+          console.error(`Error parsing PDF ${file.name}:`, pdfError);
+          throw new Error(`Failed to parse PDF: ${pdfError instanceof Error ? pdfError.message : 'Unknown error'}`);
+        }
+      } else if (file.type.includes('wordprocessingml') || file.name.endsWith('.docx')) {
+        // Parse DOCX using mammoth
+        const mammoth = await import('mammoth');
+        const { value: html } = await mammoth.convertToHtml({ arrayBuffer });
+        // Convert HTML to plain text for extraction (simple strip tags)
+        pdfText = html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+      } else {
+        // Try to read as text
+        const buffer = Buffer.from(arrayBuffer);
+        pdfText = buffer.toString('utf-8');
+      }
+      
+      // Extract sections using AI subagents and update database
+      if (pdfText && countryData) {
+        try {
+          console.log(`Extracting sections from ${file.name} for ${countryData.name}...`);
+          const extractedSections = await parseDocumentAndExtractSections(
+            pdfText,
+            fileType,
+            countryData.name
+          );
+          
+          // Update database with extracted sections
+          await updateCountrySections(
+            countryData.name,
+            fileType,
+            extractedSections
+          );
+          
+          console.log(`Successfully extracted and stored sections from ${file.name}`);
+          
+          processedFiles.push({
+            fileName: file.name,
+            fileType: fileType,
+            success: true,
+          });
+        } catch (error) {
+          console.error(`Error extracting sections from ${file.name}:`, error);
+          processedFiles.push({
+            fileName: file.name,
+            fileType: fileType,
+            success: false,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+        }
+      } else {
+        console.warn(`Skipping ${file.name}: missing text content or country data`);
+        processedFiles.push({
+          fileName: file.name,
+          fileType: fileType,
+          success: false,
+          error: 'Missing text content or country data',
+        });
+      }
+    } catch (error) {
+      console.error(`Error processing file ${file.name}:`, error);
+      processedFiles.push({
+        fileName: file.name,
+        fileType: fileType,
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+  
+  return processedFiles;
+}
+
 // PIF Generating Agent - Creates new PIF documents from template
-async function generateNewPIF(userMessage: string, currentDocument: any, countryData: any = null) {
+async function generateNewPIF(userMessage: string, currentDocument: any, countryData: any = null, uploadedFiles: any[] = []) {
   // Extract country name
   let country = extractCountryFromMessage(userMessage);
   if (!country && currentDocument && currentDocument.title) {
@@ -319,7 +575,7 @@ async function generateNewPIF(userMessage: string, currentDocument: any, country
 }
 
 // PIF Editing Agent - Modifies existing PIF documents
-async function editExistingPIF(userMessage: string, currentDocument: any) {
+async function editExistingPIF(userMessage: string, currentDocument: any, uploadedFiles: any[] = []) {
   const result = await generateText({
     model: openai('gpt-4o-mini'),
     prompt: `You are a PIF Editing Agent. Modify the existing PIF document based on this user request: "${userMessage}"
@@ -538,8 +794,46 @@ function formatSectionContent(content: unknown): string {
 
 export async function POST(req: Request) {
   console.log('Request received');
-  const { messages, document } = await req.json();
-  const lastMessage = messages[messages.length - 1];
+  
+  // Check content type to handle both JSON and FormData
+  const contentType = req.headers.get('content-type') || '';
+  let messages: any[];
+  let document: any;
+  let lastMessage: any;
+  let files: File[] = [];
+  let fileTypes: string[] = [];
+  let originalMessage: string = '';
+  let skipFiles: boolean = false;
+  let uploadCountry: string | null = null;
+  
+  if (contentType.includes('multipart/form-data')) {
+    // Handle FormData request
+    const formData = await req.formData();
+    const messagesJson = formData.get('messages') as string;
+    const documentJson = formData.get('document') as string;
+    originalMessage = (formData.get('originalMessage') as string) || '';
+    skipFiles = formData.get('skipFiles') === 'true';
+    uploadCountry = (formData.get('country') as string) || null;
+    
+    messages = messagesJson ? JSON.parse(messagesJson) : [];
+    document = documentJson ? JSON.parse(documentJson) : null;
+    
+    // Extract files and file types (only if not skipping)
+    if (!skipFiles) {
+      const filesData = formData.getAll('files') as File[];
+      const fileTypesData = formData.getAll('fileTypes') as string[];
+      files = filesData.filter(f => f instanceof File);
+      fileTypes = fileTypesData;
+    }
+    
+    lastMessage = messages[messages.length - 1] || { content: originalMessage };
+  } else {
+    // Handle JSON request
+    const body = await req.json();
+    messages = body.messages || [];
+    document = body.document || null;
+    lastMessage = messages[messages.length - 1];
+  }
 
   try {
     // First, determine what action to take
@@ -638,41 +932,114 @@ export async function POST(req: Request) {
       });
     }
 
-    if (decision.shouldProcess) {
-      if (decision.action === 'generate') {
-        console.log('PIF Generation triggered for:', decision);
-        // Use PIF Generating Agent with country data from database
-        const newDocument = await generateNewPIF(lastMessage.content, document, countryData);
-        
-        if (newDocument) {
-          console.log('PIF generated successfully');
-          return Response.json({ 
-            type: 'document_update',
-            document: newDocument,
-            decision: decision,
-            agent: 'generating',
-            countryContext: {
-              country: countryData,
-              sectionKey,
-              sectionContent,
-              error: countryLookupError,
-            },
-          });
+    // Handle manual file uploads (no pending action, just processing files)
+    if (files.length > 0 && uploadCountry && !decision.shouldProcess) {
+      // Get country data for the uploaded country
+      let targetCountryData = null;
+      if (uploadCountry) {
+        const { country, error } = await getCountryByName(uploadCountry);
+        if (!error && country) {
+          targetCountryData = country;
         } else {
-          console.log('PIF generation failed');
+          // Create country if it doesn't exist
+          const { data: newCountry, error: createError } = await supabase
+            .from('countries')
+            .insert({
+              name: uploadCountry,
+              sections: { sections: [] }
+            })
+            .select()
+            .single();
+          
+          if (!createError && newCountry) {
+            targetCountryData = newCountry;
+          }
         }
-      } else if (decision.action === 'edit') {
-        console.log('PIF Editing triggered for:', decision);
-        // Use PIF Editing Agent
-        const editedDocument = await editExistingPIF(lastMessage.content, document);
+      }
+      
+      if (targetCountryData) {
+        // Process files
+        const uploadedFiles = await processUploadedFiles(files, fileTypes, targetCountryData);
         
-        if (editedDocument) {
-          console.log('PIF edited successfully');
-          return Response.json({ 
-            type: 'document_update',
-            document: editedDocument,
+        return Response.json({
+          type: 'file_upload_success',
+          uploadedFiles: uploadedFiles,
+          country: uploadCountry,
+        });
+      } else {
+        return Response.json({
+          type: 'file_upload_error',
+          error: 'Failed to get or create country record',
+        }, { status: 400 });
+      }
+    }
+
+    if (decision.shouldProcess) {
+      // Check if files were uploaded or if user skipped
+      const hasFiles = files.length > 0;
+      
+      if (skipFiles || hasFiles) {
+        // Get country data from upload if provided, otherwise use existing countryData
+        let targetCountryData = countryData;
+        if (uploadCountry && !targetCountryData) {
+          const { country, error } = await getCountryByName(uploadCountry);
+          if (!error && country) {
+            targetCountryData = country;
+          }
+        }
+        
+        // Process files if provided
+        const uploadedFiles = hasFiles ? await processUploadedFiles(files, fileTypes, targetCountryData) : [];
+        // Now proceed with generation/editing
+        if (decision.action === 'generate') {
+          console.log('PIF Generation triggered with files:', uploadedFiles);
+          const newDocument = await generateNewPIF(originalMessage || lastMessage.content, document, countryData, uploadedFiles);
+          
+          if (newDocument) {
+            console.log('PIF generated successfully');
+            return Response.json({ 
+              type: 'document_update',
+              document: newDocument,
+              decision: decision,
+              agent: 'generating',
+              uploadedFiles: uploadedFiles,
+              countryContext: {
+                country: countryData,
+                sectionKey,
+                sectionContent,
+                error: countryLookupError,
+              },
+            });
+          }
+        } else if (decision.action === 'edit') {
+          console.log('PIF Editing triggered with files:', uploadedFiles);
+          const editedDocument = await editExistingPIF(originalMessage || lastMessage.content, document, uploadedFiles);
+          
+          if (editedDocument) {
+            console.log('PIF edited successfully');
+            return Response.json({ 
+              type: 'document_update',
+              document: editedDocument,
+              decision: decision,
+              agent: 'editing',
+              uploadedFiles: uploadedFiles,
+              countryContext: {
+                country: countryData,
+                sectionKey,
+                sectionContent,
+                error: countryLookupError,
+              },
+            });
+          }
+        }
+      } else {
+        // No files uploaded yet - ask for file upload
+        if (decision.action === 'generate' || decision.action === 'edit') {
+          return Response.json({
+            type: 'needs_file_upload',
+            action: decision.action,
+            originalMessage: lastMessage.content,
             decision: decision,
-            agent: 'editing',
             countryContext: {
               country: countryData,
               sectionKey,
@@ -680,8 +1047,6 @@ export async function POST(req: Request) {
               error: countryLookupError,
             },
           });
-        } else {
-          console.log('PIF editing failed');
         }
       }
     }
