@@ -1,0 +1,325 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 4
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Key barriers"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: [Summarise the barriers in max 2 paragraphs each, following the examples]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[600 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "STANDARD TEXT TO BE INCLUDED: The main barriers to strengthening [Country]’s transparency framework to meet the demands of the ETF under the Paris Agreement were identified through a comprehensive baseline analysis (see previous section) and discussions with key country stakeholders. They can be grouped into the following categories:"
+      },
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "link",
+            "attrs": {
+              "href": "#footnote-0",
+              "target": "_blank",
+              "rel": "noopener noreferrer nofollow",
+              "class": null
+            }
+          }
+        ],
+        "text": "[1]"
+      },
+      {
+        "type": "text",
+        "text": " "
+      },
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "STANDARD TEXT TO BE INCLUDED:"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "SUBSECTION STANDARD TEXT TO BE INCLUDED: "
+      },
+      {
+        "type": "text",
+        "text": "Barrier 1: [Country] lacks capacity to systematically organize climate data."
+      },
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": " STANDARD TEXT TO BE INCLUDED END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT:[This barrier corresponds to the project’s component 1. (1-2 paragraphs) - Lack of a national (or strong) climate transparency system and insufficient institutional arrangements, procedures, and protocols to allow for the collection of required data.]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[…]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EXAMPLE: Despite notable progress made through the first CBIT project—including establishing the The Country CARP and early work on a national climate data hub—The Country continues to face persistent challenges in organizing climate data systematically and sustainably. A fully integrated and institutionalized system for the routine collection, curation, verification, and dissemination of climate-related information across sectors is still lacking. Many ministries and agencies operate independently without harmonized data standards, resulting in fragmented, inconsistent, and sometimes duplicative data flows."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EPA, as the lead technical entity for climate transparency, has developed essential tools and guidance for data reporting. Still, coordination remains weak, especially with private sector entities and decentralized government levels. The reliance on ad hoc data collection and manual reporting processes, particularly from large emitters and industrial actors, undermines the timeliness and reliability of The Country’s climate information. Additionally, the country lacks modern IT infrastructure and analytical tools to handle the growing volumes of climate data and convert it into usable information. Without strengthening these systems, The Country risks producing incomplete or insufficient reports to meet the ETF’s expectations for transparency, consistency, and comparability. EXAMPLE END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "SUBSECTION STANDARD TEXT TO BE INCLUDED"
+      },
+      {
+        "type": "text",
+        "text": " :Barrier 2: [Country]'s climate ETF modules for GHG Inventory, adaptation/vulnerability, NDC tracking, and support needed and received are incomplete and not fully aligned with ETF requirements."
+      },
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": " SUBSECTION STANDARD TEXT TO BE INCLUDED END"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: [This barrier corresponds to the project’s component 2. (1-2 paragraphs) - Limited technical content and related capacity on the four ETF chapters (mitigation/inventory, adaptation/vulnerability modelling, NDC tracking (both mitigation and adaptation), tracking of support needed and received.]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[…]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EXAMPLE: The Country has developed initial components for the four key ETF modules: greenhouse gas inventory, adaptation and vulnerability, NDC tracking, and support needed and received. Still, these remain underdeveloped and do not fully reflect the ETF’s technical guidelines. The GHG inventory relies heavily on Tier 1 methodologies and default emission factors, even for key source categories, which limits the accuracy and policy relevance of reported emissions data. While country-specific emission factors and higher-tier approaches are being explored, their adoption remains constrained by capacity gaps, data limitations, and a lack of methodological tools."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Similarly, the adaptation/vulnerability module lacks standardized metrics, data visualization tools, and integrated risk assessment models. It is therefore underutilized in planning and fails to meet the Paris Agreement’s expectations for clear, forward-looking reporting. NDC tracking systems are still in the early stages of development and do not systematically cover both mitigation and adaptation actions or reflect linkages with national budgets, planning cycles, or development indicators. The support needed and received module lacks a robust tracking mechanism for climate finance flows, making it difficult to assess progress or identify resource gaps. Collectively, these gaps reflect limited institutional capacity and the absence of a comprehensive framework for implementing ETF-aligned reporting tools, training programs, and governance mechanisms. EXAMPLE END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "SUBSECTION STANDARD TEXT TO BE INCLUDED"
+      },
+      {
+        "type": "text",
+        "text": " Barrier 3: [Country] lacks capacity to consistently use its climate change information for reporting to the UNFCCC and for national planning without project-based financing and external consultants."
+      },
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": " SUBSECTION STANDARD TEXT TO BE INCLUDED END"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "STANDARD TEXT TO BE INCLUDED: While [Country] has demonstrated strong commitment by submitting multiple NCs, BURs, [and most recently its first BTR1], the country’s reporting system relies heavily on project-based support and external expertise. National reporting processes are not yet institutionalized or adequately funded through government budgets, making them vulnerable to discontinuity once donor-funded projects conclude. This creates a dependency loop in which reporting quality and frequency are linked to the availability of external financing and consultants, rather than sustained national capacity."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Furthermore, climate data generated for international reporting is not routinely integrated into national planning or development decision-making. Ministries and planning agencies often lack the tools, capacity, or incentives to use transparency outputs—such as emissions data or climate finance tracking—in their sectoral strategies or policy formulation. This weakens the feedback loop between transparency and implementation, reducing the impact of climate information on real-world outcomes. The lack of institutional ownership and mainstreamed use of transparency findings across the policy landscape undermines [Country]’s ability to align its national development priorities with its climate commitments. Strengthening internal capacity, operationalizing the national transparency platform for dual reporting and planning functions, and embedding transparency workflows into regular government systems are therefore essential for long-term sustainability and compliance with ETF obligations. STANDARD TEXT TO BE INCLUDED END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "Figure 1 Problem Tree"
+      }
+    ]
+  },
+  {
+    "type": "paragraph"
+  },
+  {
+    "type": "orderedList",
+    "attrs": {
+      "start": 1,
+      "type": null
+    },
+    "content": [
+      {
+        "type": "listItem",
+        "content": [
+          {
+            "type": "paragraph",
+            "content": [
+              {
+                "type": "text",
+                "text": "These barriers are further discussed in the baseline section. "
+              },
+              {
+                "type": "text",
+                "marks": [
+                  {
+                    "type": "link",
+                    "attrs": {
+                      "href": "#footnote-ref-0",
+                      "target": "_blank",
+                      "rel": "noopener noreferrer nofollow",
+                      "class": null
+                    }
+                  }
+                ],
+                "text": "↑"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

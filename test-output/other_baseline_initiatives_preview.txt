@@ -1,0 +1,18 @@
+Section: Other Baseline Initiatives
+Indices: 106 to 111 (5 nodes)
+================================================================================
+
+[0] Heading (level 5): Other baseline initiatives
+    Text: Other baseline initiatives
+
+[1] Paragraph: STANDARD TEXT TO BE INCLUDED: This CBIT project is aligned with and complements other initiatives supported by the GEF and development partners in the Country, as outlined in Table 4. STANDARD TEXT TO...
+    Text: STANDARD TEXT TO BE INCLUDED: This CBIT project is aligned with and complements other initiatives supported by the GEF and development partners in the Country, as outlined in Table 4. STANDARD TEXT TO BE INCLUDED END.
+
+[2] Paragraph: Prompt: fill out the tables with relevant transparency initiatives currently ongoing in the country specified, fill in all values with the sources provided
+    Text: Prompt: fill out the tables with relevant transparency initiatives currently ongoing in the country specified, fill in all values with the sources provided
+
+[3] Paragraph: Table 4 Transparency initiatives in [Country]
+    Text: Table 4 Transparency initiatives in [Country]
+
+[4] Table: 8 rows
+

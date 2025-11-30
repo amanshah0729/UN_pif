@@ -1,0 +1,36 @@
+Section: Official Reporting to the UNFCCC
+Indices: 47 to 58 (11 nodes)
+================================================================================
+
+[0] Heading (level 6): Official reporting to the UNFCCC
+    Text: Official reporting to the UNFCCC
+
+[1] Paragraph: STANDARD TEXT TO BE INCLUDED: To fulfill its obligations under the UNFCCC, the country has submitted several documents related to its socio-economic development objectives. STANDARD TEXT TO BE INCLUDE...
+    Text: STANDARD TEXT TO BE INCLUDED: To fulfill its obligations under the UNFCCC, the country has submitted several documents related to its socio-economic development objectives. STANDARD TEXT TO BE INCLUDED END.
+
+[2] Paragraph: PROMPT:[List the recommendations from the latest or ongoing NC and BURs/BTR and from international consultation and analysis (ICA) of developing country parties' BURs, as well as other eventual capaci...
+    Text: PROMPT:[List the recommendations from the latest or ongoing NC and BURs/BTR and from international consultation and analysis (ICA) of developing country parties' BURs, as well as other eventual capacity assessment that are relevant to this CBIT project and can be addressed by its scope in the table ...
+
+[3] Paragraph: Table 2
+    Text: Table 2
+
+[4] Paragraph: Table 2 Official reporting to the UNFCCC
+    Text: Table 2 Official reporting to the UNFCCC
+
+[5] Table: 8 rows
+
+[6] Paragraph: […]
+    Text: […]
+
+[7] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+
+[8] Heading (level 5): Progress on the four Modules of the Enhanced Transparency Framework
+    Text: Progress on the four Modules of the Enhanced Transparency Framework
+
+[9] Paragraph: STANDARD TEXT TO BE INCLUDED:The sections below outline the country’s current status, progress, and challenges across the four core modules of the ETF. STANDARD TEXT TO BE INCLUDED END.
+    Text: STANDARD TEXT TO BE INCLUDED:The sections below outline the country’s current status, progress, and challenges across the four core modules of the ETF. STANDARD TEXT TO BE INCLUDED END.
+
+[10] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+

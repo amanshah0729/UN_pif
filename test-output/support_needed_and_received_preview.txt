@@ -1,0 +1,36 @@
+Section: Support Needed and Received
+Indices: 95 to 106 (11 nodes)
+================================================================================
+
+[0] Heading (level 6): Support Needed and Received Module
+    Text: Support Needed and Received Module
+
+[1] Paragraph: PROMPT: This is the baseline of component 2, output 2.4.
+    Text: PROMPT: This is the baseline of component 2, output 2.4.
+
+[2] Paragraph: [400 words]
+    Text: [400 words]
+
+[3] paragraph
+
+[4] Paragraph: [….]
+    Text: [….]
+
+[5] Paragraph: EXAMPLE: Tracking support needed and received is essential to align national priorities with international support, improve accountability, and enhance access to climate finance. The Updated NDC (2021...
+    Text: EXAMPLE: Tracking support needed and received is essential to align national priorities with international support, improve accountability, and enhance access to climate finance. The Updated NDC (2021) estimates that US$15.5 billion is required between 2020 and 2030 to implement its conditional targ...
+
+[6] Paragraph: Through the CARP established under CBIT 1, the EPA, in collaboration with MoF, NDPC, and sector ministries, developed basic templates and tools to track support received, particularly for selected mit...
+    Text: Through the CARP established under CBIT 1, the EPA, in collaboration with MoF, NDPC, and sector ministries, developed basic templates and tools to track support received, particularly for selected mitigation and adaptation actions in the energy and transport sectors. A web-based Climate Data Hub was...
+
+[7] Paragraph: The CBIT 1 Terminal Review emphasized the need for a more comprehensive and institutionalized support tracking function. It noted that the lack of a national MRV system for support hindered the integr...
+    Text: The CBIT 1 Terminal Review emphasized the need for a more comprehensive and institutionalized support tracking function. It noted that the lack of a national MRV system for support hindered the integration of climate finance tracking into public financial management and national development planning...
+
+[8] Paragraph: BTR1 and the NID submitted in the 2024 document partial information on support from multilateral and bilateral partners, including GCF, GEF, the Adaptation Fund, and countries such as Germany, Denmark...
+    Text: BTR1 and the NID submitted in the 2024 document partial information on support from multilateral and bilateral partners, including GCF, GEF, the Adaptation Fund, and countries such as Germany, Denmark, the UK, and the US. While this demonstrates The Country’s ability to mobilize climate finance, the...
+
+[9] Paragraph: The NDC highlights these constraints and calls for developing a national climate finance MRV system to support transparency, planning, and accountability. Key barriers identified include weak knowledg...
+    Text: The NDC highlights these constraints and calls for developing a national climate finance MRV system to support transparency, planning, and accountability. Key barriers identified include weak knowledge of funding opportunities, poor coordination among institutions, limited tracking of expenditures, ...
+
+[10] Paragraph: NEW SECTION
+    Text: NEW SECTION
+

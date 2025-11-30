@@ -1,0 +1,70 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Institutional Framework for Climate Action"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: Describe the governmental institutional framework, including key ministries and agencies"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[500 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[….]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SUBSECTION"
+      }
+    ]
+  }
+]

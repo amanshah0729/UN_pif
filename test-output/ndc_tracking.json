@@ -1,0 +1,122 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "NDC Tracking Module"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "PROMPT: This is the baseline of component 2, output 2.3."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[400 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph"
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[….]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EXAMPLE: The Country’s NDC outlines 47 mitigation and 13 adaptation actions across sectors, including energy, transport, waste, industry, agriculture, water, and forestry, with quantified emission reduction targets that are both conditional and unconditional. While the country has made progress in developing its national transparency framework, systems for tracking NDC implementation remain fragmented, under-resourced, and insufficiently institutionalized. These limitations reduce The Country’s ability to assess progress, identify gaps, and make evidence-based adjustments to its climate policy."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "The GEF-6 CBIT 1 project was foundational in operationalizing The Country’s MRV system and integrating climate tracking into national planning. Through the The Country Climate Ambitious Reporting Programme (CARP), CBIT 1 piloted an early version of the NDC tracking system. It supported the development of templates to monitor mitigation and adaptation measures, particularly in energy and transport, created a web-based Climate Data Hub hosted by the EPA, and collaborated with the NDPC to integrate five climate indicators into the 2018–2022 Medium-Term Development Framework."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Despite these early gains, The Country’s BTR1 and the CBIT 1 Terminal Review indicate that tracking of NDC actions remains limited in scope and uptake. Although the EPA leads overall coordination, sector ministries lack the mandate, capacity, and technical tools to systematically monitor their NDC contributions. The templates developed under CBIT 1 have not been institutionalized across all sectors, and ministries are not required to report implementation status to the EPA. Consequently, data on the progress of NDC actions is not routinely updated or verified, and reporting remains heavily reliant on ad hoc inputs, undermining the accuracy and utility of BTR submissions."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "According to BTR1, while many NDC actions are implemented through sectoral or donor-funded programmes, there is no national mechanism to track outcomes or ensure alignment with NDC targets. This gap is particularly acute for adaptation actions implemented at the subnational level, where data collection and aggregation remain weak. The lack of harmonized indicators and a dedicated institutional framework hinders the timely and consistent tracking required under the ETF. Where tracking occurs, it often focuses on activity-level outputs rather than outcomes or impacts, limiting the ability to evaluate effectiveness."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Institutional fragmentation remains a significant challenge. While the EPA is designated the national coordinating body for climate reporting, it lacks enforcement authority over sectoral agencies. NDPC, although central to national development monitoring, does not yet integrate NDC targets into its annual reporting. MDAs operate in silos, use separate reporting systems, and lack trained staff and tools for climate MRV. Coordination between EPA and NDPC, initiated under CBIT 1, has yet to be formalized."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Subnational actors are largely excluded from NDC tracking. MMDAs, key to adaptation implementation, were only marginally involved in CBIT 1, leaving capacity gaps that require targeted follow-up. The First Updated NDC and BTR1 stress the urgent need to establish a national NDC tracking system with sectoral accountability. They recommend strengthening NDPC’s integration of climate targets, improving indicator use, regularizing sectoral reporting, and aligning MRV with national development planning. EXAMPLE END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SUBSECTION"
+      }
+    ]
+  }
+]

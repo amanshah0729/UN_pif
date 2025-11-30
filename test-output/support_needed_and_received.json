@@ -1,0 +1,118 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Support Needed and Received Module"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: This is the baseline of component 2, output 2.4."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[400 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph"
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[….]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EXAMPLE: Tracking support needed and received is essential to align national priorities with international support, improve accountability, and enhance access to climate finance. The Updated NDC (2021) estimates that US$15.5 billion is required between 2020 and 2030 to implement its conditional targets, with US$3.9 billion expected from domestic sources and US$11.6 billion from international finance, technology transfer, and capacity-building. However, The Country’s capacity to track, report, and coordinate these support flows remains limited, fragmented, and not fully institutionalized."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Through the CARP established under CBIT 1, the EPA, in collaboration with MoF, NDPC, and sector ministries, developed basic templates and tools to track support received, particularly for selected mitigation and adaptation actions in the energy and transport sectors. A web-based Climate Data Hub was developed to host information on GHG inventory and MRV activities, including elements of support tracking. However, the system was not scaled across sectors, and the templates were not adopted as part of national procedures. CBIT 1 did not establish a dedicated or interoperable system to track financial, technical, or capacity-building support on NDC implementation, and institutional mandates for data collection remained weak."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "The CBIT 1 Terminal Review emphasized the need for a more comprehensive and institutionalized support tracking function. It noted that the lack of a national MRV system for support hindered the integration of climate finance tracking into public financial management and national development planning. Coordination between EPA and MoF was ad hoc, and existing efforts depended on donor-funded projects. In particular, data collected under CBIT 1 lacked disaggregation by sector, source, or type of support and were not linked to measurable outcomes. As a result, support-related reporting in BTR1 remained limited and primarily descriptive."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "BTR1 and the NID submitted in the 2024 document partial information on support from multilateral and bilateral partners, including GCF, GEF, the Adaptation Fund, and countries such as Germany, Denmark, the UK, and the US. While this demonstrates The Country’s ability to mobilize climate finance, the reports acknowledge critical gaps in tracking disbursements, effectiveness, and alignment with NDC targets. There is no system for aggregating climate-related financial flows from development partners, nor is there a methodology to capture in-kind support, technical assistance, or capacity-building in a structured manner. Support needs assessments are also lacking, particularly at the sector level, making it difficult to establish a coherent and evidence-based resource mobilization strategy."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "The NDC highlights these constraints and calls for developing a national climate finance MRV system to support transparency, planning, and accountability. Key barriers identified include weak knowledge of funding opportunities, poor coordination among institutions, limited tracking of expenditures, and the absence of standardized reporting mechanisms. The MoF, NDPC, and EPA operate separate systems with different data formats, reporting cycles, and priorities. Sector ministries and MMDAs are not systematically involved in tracking or reporting climate-related support, despite being responsible for implementing many NDC actions. Technical tools like CLIMFINTRACK currently focus on public expenditures and do not capture off-budget climate finance or support received by CSOs, the private sector, or academia. As a result, The Country lacks a centralized, consistent, and policy-relevant view of support flows, which undermines its capacity to plan, budget, and report under the ETF. EXAMPLE END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SECTION"
+      }
+    ]
+  }
+]

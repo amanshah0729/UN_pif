@@ -1,0 +1,793 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 5
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Other baseline initiatives"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "STANDARD TEXT TO BE INCLUDED: This CBIT project is aligned with and complements other initiatives supported by the GEF and development partners in the Country, as outlined in Table 4. STANDARD TEXT TO BE INCLUDED END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Prompt: fill out the tables with relevant transparency initiatives currently ongoing in the country specified, fill in all values with the sources provided"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "Table 4 Transparency initiatives in [Country]"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Program / Project"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Leading ministry and supporting entities"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Brief description"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Duration (start and end year)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Value (USD)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Relation to ETF and transparency system"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "EXAMPLE: First Biennial Transparency Report and Fifth National Communication"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "CBIT 1 Project"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "ICAT"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "NDC Partnership"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Sustainable Development Goals (SDGs)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Partnership for Market Implementation (PMI)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "REDD+"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

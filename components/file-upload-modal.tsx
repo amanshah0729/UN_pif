@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Plus, X, Upload } from "lucide-react"
+import { Plus, X, Upload, Loader2 } from "lucide-react"
 
 interface FileRow {
   id: string
@@ -18,6 +18,7 @@ interface FileUploadModalProps {
   onOpenChange: (open: boolean) => void
   onContinue: (files: File[], fileTypes: string[], country: string) => void
   onSkip: () => void
+  isProcessing?: boolean
 }
 
 const FILE_TYPES = [
@@ -29,7 +30,7 @@ const FILE_TYPES = [
   "Other"
 ]
 
-export function FileUploadModal({ open, onOpenChange, onContinue, onSkip }: FileUploadModalProps) {
+export function FileUploadModal({ open, onOpenChange, onContinue, onSkip, isProcessing = false }: FileUploadModalProps) {
   const [country, setCountry] = useState<string>("")
   const [fileRows, setFileRows] = useState<FileRow[]>([
     { id: "1", fileType: "", file: null }
@@ -81,16 +82,32 @@ export function FileUploadModal({ open, onOpenChange, onContinue, onSkip }: File
   const canContinue = country && fileRows.some(row => row.file && row.fileType)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={isProcessing ? undefined : onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>Upload Reference Documents</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Upload PDF documents that the AI can reference when generating or editing your PIF.
-          </p>
+        {isProcessing ? (
+          <div className="space-y-4 py-8">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <div className="text-center space-y-2">
+                <p className="font-medium">Processing your files...</p>
+                <p className="text-sm text-muted-foreground">
+                  Parsing documents and extracting information. This may take up to a minute.
+                </p>
+                <p className="text-xs text-muted-foreground mt-4">
+                  Please keep this window open while we process your files.
+                </p>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Upload PDF documents that the AI can reference when generating or editing your PIF.
+            </p>
           
           {/* Country Input */}
           <div className="space-y-2">
@@ -177,16 +194,19 @@ export function FileUploadModal({ open, onOpenChange, onContinue, onSkip }: File
               </Button>
             </div>
           </div>
-        </div>
+          </div>
+        )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleSkip}>
-            Skip
-          </Button>
-          <Button onClick={handleContinue} disabled={!canContinue}>
-            Continue
-          </Button>
-        </DialogFooter>
+        {!isProcessing && (
+          <DialogFooter>
+            <Button variant="outline" onClick={handleSkip}>
+              Skip
+            </Button>
+            <Button onClick={handleContinue} disabled={!canContinue}>
+              Continue
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   )

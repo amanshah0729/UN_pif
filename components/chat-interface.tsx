@@ -98,6 +98,108 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
             }
             setMessages(prev => [...prev, fallbackMessage])
           }
+        } else if (data.type === 'database_lookup_status') {
+          // Show database lookup status and proceed with generation
+          const dbLookupMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: "Pulling information from database..."
+          }
+          setMessages(prev => [...prev, dbLookupMessage])
+          
+          // Update with result after a moment
+          setTimeout(() => {
+            const dbResultMessage = data.hasData
+              ? "✓ Information found in database."
+              : "Information not found in database. Using web sources instead."
+            
+            setMessages(prev => 
+              prev.map(msg => 
+                msg.id === dbLookupMessage.id 
+                  ? { ...msg, content: dbResultMessage }
+                  : msg
+              )
+            )
+            
+            // Automatically proceed with generation
+            setTimeout(async () => {
+              setIsGeneratingDocument(true)
+              const generatingMessage: Message = {
+                id: (Date.now() + 2).toString(),
+                role: "assistant",
+                content: "Now generating your PIF document... This may take a moment."
+              }
+              setMessages(prev => [...prev, generatingMessage])
+              
+              try {
+                // Make request to actually generate the document
+                const genResponse = await fetch('/api/chat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    messages: [...messages, {
+                      role: 'user',
+                      content: data.originalMessage
+                    }, {
+                      role: 'assistant',
+                      content: 'Pulling information from database'
+                    }].map(msg => ({
+                      role: msg.role,
+                      content: msg.content
+                    })),
+                    document: document
+                  }),
+                })
+                
+                if (!genResponse.ok) throw new Error('Failed to generate')
+                
+                const genData = await genResponse.json()
+                if (genData.type === 'document_update') {
+                  setDocument(genData.document)
+                  
+                  const successMessage: Message = {
+                    id: (Date.now() + 3).toString(),
+                    role: "assistant",
+                    content: `✓ Successfully generated a comprehensive PIF for ${genData.decision?.country || data.country || 'your project'}. The document is now ready for review.`
+                  }
+                  setMessages(prev => [...prev, successMessage])
+                  
+                  // Remove generating message
+                  setMessages(prev => prev.filter(msg => msg.id !== generatingMessage.id))
+                  
+                  if (data.action && data.originalMessage) {
+                    setPendingAction(null)
+                  }
+                }
+              } catch (error) {
+                console.error('Error generating:', error)
+                const errorMessage: Message = {
+                  id: (Date.now() + 4).toString(),
+                  role: "assistant",
+                  content: "Sorry, I encountered an error generating the document. Please try again."
+                }
+                setMessages(prev => [...prev, errorMessage])
+              } finally {
+                setIsGeneratingDocument(false)
+              }
+            }, 1500)
+          }, 1000)
+        } else if (data.type === 'file_upload_question') {
+          // Show message asking if they want to upload files or use existing data
+          const uploadMessage: Message = {
+            id: (Date.now() + 1).toString(),
+            role: "assistant",
+            content: "Would you like to upload files for me to reference, or should I proceed using the existing information in the database and web sources?"
+          }
+          setMessages(prev => [...prev, uploadMessage])
+          
+          // Store pending action for later
+          setPendingAction({
+            action: data.action,
+            originalMessage: data.originalMessage
+          })
         } else if (data.type === 'needs_file_upload') {
           // Show message asking for file upload
           const uploadMessage: Message = {
@@ -189,8 +291,11 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
     }
   }
 
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false)
+
   const handleFileUploadContinue = async (files: File[], fileTypes: string[], country: string) => {
-    setShowFileUploadModal(false)
+    // Don't close modal yet - show loading state
+    setIsProcessingFiles(true)
     setIsLoading(true)
     
     try {
@@ -236,33 +341,236 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
       if (contentType?.includes('application/json')) {
         const data = await response.json()
         
-        // If there was a pending action, continue with generation/editing
+        // Handle document update with step-by-step messages
         if (pendingAction && data.type === 'document_update') {
-          setIsGeneratingDocument(true)
-          const loadingMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content: data.agent === 'generating' 
-              ? "Generating your comprehensive PIF document... This may take a moment."
-              : "Updating your PIF document... Making targeted improvements."
+          // Close modal first
+          setShowFileUploadModal(false)
+          setIsProcessingFiles(false)
+          
+          // Show step-by-step messages
+          if (data.filesUploaded) {
+            // Step 1: Upload complete
+            const uploadCompleteMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: "✓ Files uploaded and processed successfully."
+            }
+            setMessages(prev => [...prev, uploadCompleteMessage])
+            
+            // Step 2: Database lookup
+            const dbLookupMessage: Message = {
+              id: (Date.now() + 2).toString(),
+              role: "assistant",
+              content: "Pulling information from database..."
+            }
+            setMessages(prev => [...prev, dbLookupMessage])
+            
+            // Automatically proceed with generation after showing database lookup
+            setTimeout(async () => {
+              try {
+                const genResponse = await fetch('/api/chat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    messages: [...messages, {
+                      role: 'user',
+                      content: data.originalMessage
+                    }, {
+                      role: 'assistant',
+                      content: 'Files uploaded, pulling information from database'
+                    }].map(msg => ({
+                      role: msg.role,
+                      content: msg.content
+                    })),
+                    document: document
+                  }),
+                })
+                
+                if (!genResponse.ok) throw new Error('Failed to generate')
+                
+                const genContentType = genResponse.headers.get('content-type')
+                if (genContentType?.includes('application/json')) {
+                  const genData = await genResponse.json()
+                  
+                  if (genData.type === 'database_lookup_status') {
+                    // Update database lookup message with result
+                    const dbResultMessage = genData.hasData
+                      ? "✓ Information found in database."
+                      : "Information not found in database. Using web sources instead."
+                    
+                    setMessages(prev => 
+                      prev.map(msg => 
+                        msg.id === dbLookupMessage.id 
+                          ? { ...msg, content: dbResultMessage }
+                          : msg
+                      )
+                    )
+                    
+                    // Step 3: Now generating
+                    setIsGeneratingDocument(true)
+                    const generatingMessage: Message = {
+                      id: (Date.now() + 3).toString(),
+                      role: "assistant",
+                      content: "Now generating your PIF document... This may take a moment."
+                    }
+                    setMessages(prev => [...prev, generatingMessage])
+                    
+                    // Wait a bit then get the actual document
+                    await new Promise(resolve => setTimeout(resolve, 1000))
+                    
+                    // Make final request to get document
+                    const finalResponse = await fetch('/api/chat', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                      },
+                      body: JSON.stringify({
+                        messages: [...messages, {
+                          role: 'user',
+                          content: data.originalMessage
+                        }, {
+                          role: 'assistant',
+                          content: 'Pulling information from database'
+                        }].map(msg => ({
+                          role: msg.role,
+                          content: msg.content
+                        })),
+                        document: document
+                      }),
+                    })
+                    
+                    const finalData = await finalResponse.json()
+                    if (finalData.type === 'document_update') {
+                      // Step 4: Update document
+                      setDocument(finalData.document)
+                      
+                      // Step 5: Success message
+                      const successMessage: Message = {
+                        id: (Date.now() + 4).toString(),
+                        role: "assistant",
+                        content: `✓ Successfully generated a comprehensive PIF for ${finalData.decision?.country || 'your project'}. The document is now ready for review.`
+                      }
+                      setMessages(prev => [...prev, successMessage])
+                      
+                      // Remove generating message
+                      setMessages(prev => prev.filter(msg => msg.id !== generatingMessage.id))
+                      setPendingAction(null)
+                    }
+                  }
+                }
+              } catch (error) {
+                console.error('Error generating:', error)
+              } finally {
+                setIsGeneratingDocument(false)
+              }
+            }, 1000)
+          } else {
+            // No files uploaded, check database first
+            const dbLookupMessage: Message = {
+              id: (Date.now() + 1).toString(),
+              role: "assistant",
+              content: "Pulling information from database..."
+            }
+            setMessages(prev => [...prev, dbLookupMessage])
+            
+            // Check database status
+            setTimeout(async () => {
+              try {
+                const statusResponse = await fetch('/api/chat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    messages: [...messages, {
+                      role: 'user',
+                      content: data.originalMessage || pendingAction?.originalMessage
+                    }].map(msg => ({
+                      role: msg.role,
+                      content: msg.content
+                    })),
+                    document: document
+                  }),
+                })
+                
+                const statusData = await statusResponse.json()
+                
+                if (statusData.type === 'database_lookup_status') {
+                  // Update database lookup message with result
+                  const dbResultMessage = statusData.hasData
+                    ? "✓ Information found in database."
+                    : "Information not found in database. Using web sources instead."
+                  
+                  setMessages(prev => 
+                    prev.map(msg => 
+                      msg.id === dbLookupMessage.id 
+                        ? { ...msg, content: dbResultMessage }
+                        : msg
+                    )
+                  )
+                  
+                  // Now generate
+                  setIsGeneratingDocument(true)
+                  const generatingMessage: Message = {
+                    id: (Date.now() + 2).toString(),
+                    role: "assistant",
+                    content: "Now generating your PIF document... This may take a moment."
+                  }
+                  setMessages(prev => [...prev, generatingMessage])
+                  
+                  await new Promise(resolve => setTimeout(resolve, 1000))
+                  
+                  // Get the actual document
+                  const finalResponse = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      messages: [...messages, {
+                        role: 'user',
+                        content: data.originalMessage || pendingAction?.originalMessage
+                      }, {
+                        role: 'assistant',
+                        content: 'Pulling information from database'
+                      }].map(msg => ({
+                        role: msg.role,
+                        content: msg.content
+                      })),
+                      document: document
+                    }),
+                  })
+                  
+                  const finalData = await finalResponse.json()
+                  if (finalData.type === 'document_update') {
+                    setDocument(finalData.document)
+                    
+                    const successMessage = finalData.agent === 'generating'
+                      ? `✓ Successfully generated a comprehensive PIF for ${finalData.decision?.country || 'your project'}. The document is now ready for review.`
+                      : `✓ Successfully updated your PIF document based on your request.`
+                    
+                    setMessages(prev => 
+                      prev.map(msg => 
+                        msg.id === generatingMessage.id 
+                          ? { ...msg, content: successMessage }
+                          : msg
+                      )
+                    )
+                    setPendingAction(null)
+                  }
+                }
+              } catch (error) {
+                console.error('Error:', error)
+              } finally {
+                setIsGeneratingDocument(false)
+              }
+            }, 1000)
           }
-          setMessages(prev => [...prev, loadingMessage])
           
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          
-          setDocument(data.document)
-          
-          const successMessage = data.agent === 'generating'
-            ? `Perfect! I've generated a comprehensive PIF for ${data.decision?.country || 'your project'}. The document is now ready for review.`
-            : `Great! I've updated your PIF document based on your request. The changes have been applied successfully.`
-          
-          setMessages(prev => 
-            prev.map(msg => 
-              msg.id === loadingMessage.id 
-                ? { ...msg, content: successMessage }
-                : msg
-            )
-          )
+          setPendingAction(null)
+          setIsGeneratingDocument(false)
         } else if (data.type === 'file_upload_success') {
           // Manual upload - show success message
           const successCount = data.uploadedFiles?.filter((f: any) => f.success).length || files.length
@@ -284,6 +592,8 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
       }
       
       setPendingAction(null)
+      // Close modal after successful processing
+      setShowFileUploadModal(false)
     } catch (error) {
       console.error('Error uploading files:', error)
       const errorMessage: Message = {
@@ -292,9 +602,12 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
         content: "Sorry, I encountered an error processing your files. Please try again."
       }
       setMessages(prev => [...prev, errorMessage])
+      // Close modal on error too
+      setShowFileUploadModal(false)
     } finally {
       setIsLoading(false)
       setIsGeneratingDocument(false)
+      setIsProcessingFiles(false)
     }
   }
 
@@ -461,6 +774,207 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
                       </span>
                     </div>
                   )}
+                  {message.content.includes("Would you like to upload files") && pendingAction && (
+                    <div className="flex flex-col gap-2 mt-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const responseMessage: Message = {
+                            id: Date.now().toString(),
+                            role: "user",
+                            content: "Yes, I'd like to upload files"
+                          }
+                          setMessages(prev => [...prev, responseMessage])
+                          setIsLoading(true)
+                          
+                          try {
+                            const response = await fetch('/api/chat', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                messages: [...messages, responseMessage].map(msg => ({
+                                  role: msg.role,
+                                  content: msg.content
+                                })),
+                                document: document
+                              }),
+                            })
+                            
+                            if (!response.ok) throw new Error('Failed to get response')
+                            
+                            const contentType = response.headers.get('content-type')
+                            if (contentType?.includes('application/json')) {
+                              const data = await response.json()
+                              if (data.type === 'needs_file_upload') {
+                                setShowFileUploadModal(true)
+                              }
+                            }
+                          } catch (error) {
+                            console.error('Error:', error)
+                          } finally {
+                            setIsLoading(false)
+                          }
+                        }}
+                        className="w-full text-left justify-start"
+                        disabled={isLoading || isGeneratingDocument}
+                      >
+                        Upload Files
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          const responseMessage: Message = {
+                            id: Date.now().toString(),
+                            role: "user",
+                            content: "No, use existing data"
+                          }
+                          setMessages(prev => [...prev, responseMessage])
+                          setIsLoading(true)
+                          
+                          // Immediately show "Pulling information from database..." message
+                          const dbLookupMessage: Message = {
+                            id: (Date.now() + 1).toString(),
+                            role: "assistant",
+                            content: "Pulling information from database..."
+                          }
+                          setMessages(prev => [...prev, dbLookupMessage])
+                          
+                          try {
+                            const response = await fetch('/api/chat', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                messages: [...messages, responseMessage].map(msg => ({
+                                  role: msg.role,
+                                  content: msg.content
+                                })),
+                                document: document
+                              }),
+                            })
+                            
+                            if (!response.ok) throw new Error('Failed to get response')
+                            
+                            const contentType = response.headers.get('content-type')
+                            if (contentType?.includes('application/json')) {
+                              const data = await response.json()
+                              
+                              if (data.type === 'database_lookup_status') {
+                                // Update database lookup message with result
+                                const dbResultMessage = data.hasData
+                                  ? "✓ Information found in database."
+                                  : "Information not found in database. Using web sources instead."
+                                
+                                setMessages(prev => 
+                                  prev.map(msg => 
+                                    msg.id === dbLookupMessage.id 
+                                      ? { ...msg, content: dbResultMessage }
+                                      : msg
+                                  )
+                                )
+                                
+                                // Now proceed with generation
+                                setIsGeneratingDocument(true)
+                                const generatingMessage: Message = {
+                                  id: (Date.now() + 2).toString(),
+                                  role: "assistant",
+                                  content: "Now generating your PIF document... This may take a moment."
+                                }
+                                setMessages(prev => [...prev, generatingMessage])
+                                
+                                // Wait a moment then get the actual document
+                                await new Promise(resolve => setTimeout(resolve, 1000))
+                                
+                                // Make final request to get document
+                                const finalResponse = await fetch('/api/chat', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                  },
+                                  body: JSON.stringify({
+                                    messages: [...messages, responseMessage, {
+                                      role: 'assistant',
+                                      content: 'Pulling information from database'
+                                    }].map(msg => ({
+                                      role: msg.role,
+                                      content: msg.content
+                                    })),
+                                    document: document
+                                  }),
+                                })
+                                
+                                if (!finalResponse.ok) throw new Error('Failed to generate')
+                                
+                                const finalData = await finalResponse.json()
+                                if (finalData.type === 'document_update') {
+                                  setDocument(finalData.document)
+                                  
+                                  const successMessage: Message = {
+                                    id: (Date.now() + 3).toString(),
+                                    role: "assistant",
+                                    content: `✓ Successfully generated a comprehensive PIF for ${finalData.decision?.country || 'your project'}. The document is now ready for review.`
+                                  }
+                                  setMessages(prev => [...prev, successMessage])
+                                  
+                                  // Remove generating message
+                                  setMessages(prev => prev.filter(msg => msg.id !== generatingMessage.id))
+                                  setPendingAction(null)
+                                }
+                              } else if (data.type === 'document_update') {
+                                // Fallback: if backend returns document directly
+                                setIsGeneratingDocument(true)
+                                const loadingMessage: Message = {
+                                  id: (Date.now() + 1).toString(),
+                                  role: "assistant",
+                                  content: data.agent === 'generating' 
+                                    ? "Generating your comprehensive PIF document... This may take a moment."
+                                    : "Updating your PIF document... Making targeted improvements."
+                                }
+                                setMessages(prev => [...prev, loadingMessage])
+                                
+                                await new Promise(resolve => setTimeout(resolve, 2000))
+                                
+                                setDocument(data.document)
+                                
+                                const successMessage = data.agent === 'generating'
+                                  ? `Perfect! I've generated a comprehensive PIF for ${data.decision?.country || 'your project'}. The document is now ready for review.`
+                                  : `Great! I've updated your PIF document based on your request. The changes have been applied successfully.`
+                                
+                                setMessages(prev => 
+                                  prev.map(msg => 
+                                    msg.id === loadingMessage.id 
+                                      ? { ...msg, content: successMessage }
+                                      : msg
+                                  )
+                                )
+                                setPendingAction(null)
+                              }
+                            }
+                          } catch (error) {
+                            console.error('Error:', error)
+                            const errorMessage: Message = {
+                              id: (Date.now() + 10).toString(),
+                              role: "assistant",
+                              content: "Sorry, I encountered an error. Please try again."
+                            }
+                            setMessages(prev => [...prev, errorMessage])
+                          } finally {
+                            setIsLoading(false)
+                            setIsGeneratingDocument(false)
+                          }
+                        }}
+                        className="w-full text-left justify-start"
+                        disabled={isLoading || isGeneratingDocument}
+                      >
+                        Use Existing Data
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -494,6 +1008,7 @@ export function ChatInterface({ document, setDocument }: ChatInterfaceProps) {
         onOpenChange={setShowFileUploadModal}
         onContinue={handleFileUploadContinue}
         onSkip={handleFileUploadSkip}
+        isProcessing={isProcessingFiles}
       />
     </div>
   )

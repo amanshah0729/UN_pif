@@ -1,0 +1,101 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 5
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "NEW SECTION: Climate Transparency in {Country}"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[350 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[PROMPT: Paragraphs 1-2 – Country not complying completely with Paris agreement requirements and ETF, explain key challenges (high level), what has been done to date to address these. Describe what would happen without this project (simple future narratives). What are key drivers that would maintain the status quo (or make it worse)? E.g. population growth, economic development, climate change, socio-cultural and political factors, including conflicts, or technological changes. i.e. based on existing trends, the country would continue to not report in accordance with the ETF. Drivers are important as we have to respond to these in the description of the project]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[…]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "EXAMPLE: The Country is highly vulnerable to climate change due to its geographical location, climatic variability, and socio-economic context. The country experiences distinct dry and wet seasons, with regional disparities in rainfall. Northern The Country faces prolonged droughts, while southern and coastal regions experience heavy rainfall, flooding, and sea-level rise. Over 2.5 million smallholder farmers depend on rain-fed agriculture, making food systems especially sensitive to climate variability. Coastal areas like Accra, Takoradi, and Ada are increasingly affected by erosion, saltwater intrusion, and displacement. Land degradation, deforestation, and rising temperatures threaten ecosystems and rural livelihoods. Rapid urbanization and inadequate infrastructure further increase exposure to climate risks, affecting energy systems, water supply, housing, and health."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Despite these challenges, The Country contributes relatively little to global GHG emissions. Its First National Inventory Document (NID) reported 2022 emissions at 54,758.55 ktCO₂e (including LULUCF). The energy sector was the largest emitter (45.1%), followed by agriculture (21.2%), waste (17.8%), LULUCF (12.4%), and IPPU (3.5%). Total emissions rose by over 214% between 1990 and 2022, driven by energy demand, urbanization, transport, and industry. Energy sector emissions grew by 754%, while agricultural emissions tripled, driven by methane from livestock and rice, and nitrous oxide from fertilizer. Urban waste emissions also rose due to poor landfill practices and open burning."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "The Country’s NDC aims to reduce emissions by 64,000 ktCO₂e by 2030, including 24,000 ktCO₂e via carbon markets. The country has developed a long-term energy transition framework and enacted the 2023 Emissions Levy Act as part of its carbon pricing strategy. However, enforcement is limited by gaps in facility-level data and weak monitoring and verification systems."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "The Country has made notable progress in developing its national transparency framework under the Paris Agreement’s ETF. It submitted its BTR1 and NID in 2024, covering GHG inventories, NDC progress, adaptation, and support flows. These were enabled by CBIT-funded capacity-building efforts and the The Country Climate Ambitious Reporting Programme (CARP). The country is preparing for its first technical expert review."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Nonetheless, challenges persist. Without further support, The Country risks continued reporting limitations. To meet ETF modalities, The Country must improve data quality, develop emission factors, strengthen QA/QC, ensure sustainable finance, and build institutional and technical capacity. EXAMPLE END."
+      }
+    ]
+  }
+]

@@ -661,10 +661,10 @@ function mergeDocumentEdits(originalDocument: any, edits: any) {
   return mergedDocument;
 }
 
-// Decision Agent - Determines if document generation/editing is needed and which agent to use
+// Decision Agent - Determines if document generation is needed
 async function shouldProcessDocument(userMessage: string, currentDocument: any): Promise<{ 
   shouldProcess: boolean; 
-  action: 'generate' | 'edit' | 'none';
+  action: 'generate' | 'none';
   country?: string; 
   section?: string | null;
   needsDatabase?: boolean;
@@ -674,12 +674,10 @@ async function shouldProcessDocument(userMessage: string, currentDocument: any):
     model: openai('gpt-4o-mini'),
     prompt: `Analyze this user message and determine what action to take: "${userMessage}"
 
-Current document state: ${currentDocument && currentDocument.title ? 'Document exists' : 'No document exists'}
-
 Return ONLY a JSON object with this exact structure (no markdown, no code blocks, just pure JSON):
 {
   "shouldProcess": boolean,
-  "action": "generate" | "edit" | "none",
+  "action": "generate" | "none",
   "country": "country name if mentioned" | null,
   "section": "specific section identifier (e.g., GHG) if the user wants a specific section" | null,
   "needsDatabase": boolean,
@@ -687,17 +685,15 @@ Return ONLY a JSON object with this exact structure (no markdown, no code blocks
 }
 
 DECISION LOGIC:
-- "generate": Use when creating a NEW PIF document (no existing document OR user explicitly wants a new one).
-- "edit": Use when MODIFYING an existing PIF document (document exists AND user wants changes).
-- "none": Use for general chat where no document work is required.
+- "generate": Use when creating a NEW PIF document. Examples: "Create a PIF for Kenya", "Generate PIF for Pakistan", "Draft a PIF for Cuba"
+- "none": Use for general chat where no document generation is required. Examples: "What is a PIF?", "Hello", general questions
 - Set "needsDatabase" to true when the user is asking about an existing country or section that should be retrieved from the database before continuing. Example triggers: "Show me Rwanda", "What's in the Rwanda GHG section", "Give me the country data for Kenya".
 - If "needsDatabase" is true, ensure you fill "country", and provide "section" when the request is targeting a specific section.
 
 Examples:
-- "Create a PIF for Kenya" + no document = generate
-- "Create a PIF for Kenya" + existing document = generate (new document)
-- "Update the budget section" + existing document = edit
-- "Make the objectives more specific" + existing document = edit
+- "Create a PIF for Kenya" = generate
+- "Generate PIF for Pakistan" = generate
+- "Draft a PIF for Cuba" = generate
 - "What information do we have for Rwanda?" = needsDatabase true
 - "Show me the Rwanda GHG section" = needsDatabase true with section "GHG"
 - "What is a PIF?" = none
@@ -733,11 +729,9 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
     const detectedSection = extractSectionFromMessage(userMessage);
     
     const pifKeywords = ['create', 'make', 'generate', 'draft', 'write', 'pif', 'project information form'];
-    const editKeywords = ['update', 'modify', 'change', 'edit', 'revise', 'improve', 'add', 'remove'];
     const hasPifRequest = pifKeywords.some(keyword => lowerMessage.includes(keyword));
-    const hasEditRequest = editKeywords.some(keyword => lowerMessage.includes(keyword));
     
-    // Determine action based on document state and keywords
+    // Determine action based on keywords
     if (hasPifRequest && mentionedCountry) {
       return { 
         shouldProcess: true, 
@@ -746,17 +740,6 @@ IMPORTANT: Return ONLY the JSON object, no markdown formatting, no code blocks, 
         section: detectedSection,
         needsDatabase: false,
         reason: 'Fallback detection: PIF request with country' 
-      };
-    }
-    
-    if (hasEditRequest && currentDocument && currentDocument.title) {
-      return { 
-        shouldProcess: true, 
-        action: 'edit', 
-        country: mentionedCountry, 
-        section: detectedSection,
-        needsDatabase: false,
-        reason: 'Fallback detection: Edit request with existing document' 
       };
     }
     
@@ -974,11 +957,59 @@ export async function POST(req: Request) {
       }
     }
 
+    // Handle generation after database lookup status - actually generate the document
+    // Check if previous message was about database lookup
+    const prevMessage = messages.length > 1 ? messages[messages.length - 2] : null;
+    const isAfterDatabaseLookup = prevMessage?.content?.toLowerCase().includes('pulling') ||
+                                   lastMessage.content.toLowerCase().includes('pulling') ||
+                                   lastMessage.content.toLowerCase().includes('database') ||
+                                   lastMessage.content.toLowerCase().includes('information') ||
+                                   lastMessage.content.toLowerCase().includes('web sources');
+    
+    if (decision.shouldProcess && decision.action === 'generate' && isAfterDatabaseLookup) {
+      // Actually generate the document now
+      console.log('Actually generating PIF document now');
+      
+      // Get the original message from earlier in conversation
+      const originalGenMessage = originalMessage || messages.find(m => 
+        m.content.toLowerCase().includes('create') || 
+        m.content.toLowerCase().includes('generate') ||
+        m.content.toLowerCase().includes('draft') ||
+        m.content.toLowerCase().includes('pif')
+      )?.content || lastMessage.content;
+      
+      const newDocument = await generateNewPIF(originalGenMessage, document, countryData, []);
+      
+      if (newDocument) {
+        console.log('PIF generated successfully');
+        return Response.json({ 
+          type: 'document_update',
+          document: newDocument,
+          decision: decision,
+          agent: 'generating',
+          uploadedFiles: [],
+          filesUploaded: false,
+          countryContext: {
+            country: countryData,
+            sectionKey,
+            sectionContent,
+            error: countryLookupError,
+          },
+        });
+      }
+    }
+
     if (decision.shouldProcess) {
+      // Check if this is a response to the file upload question
+      const lowerMessage = lastMessage.content.toLowerCase();
+      const wantsToUpload = lowerMessage.includes('upload') || lowerMessage.includes('yes') || lowerMessage.includes('add files');
+      const useExisting = lowerMessage.includes('use existing') || lowerMessage.includes('no') || lowerMessage.includes('proceed') || lowerMessage.includes('continue') || lowerMessage.includes('skip');
+      
       // Check if files were uploaded or if user skipped
       const hasFiles = files.length > 0;
       
-      if (skipFiles || hasFiles) {
+      // If user explicitly wants to upload files or has uploaded files
+      if (hasFiles || (wantsToUpload && !useExisting)) {
         // Get country data from upload if provided, otherwise use existing countryData
         let targetCountryData = countryData;
         if (uploadCountry && !targetCountryData) {
@@ -988,55 +1019,112 @@ export async function POST(req: Request) {
           }
         }
         
-        // Process files if provided
-        const uploadedFiles = hasFiles ? await processUploadedFiles(files, fileTypes, targetCountryData) : [];
-        // Now proceed with generation/editing
-        if (decision.action === 'generate') {
-          console.log('PIF Generation triggered with files:', uploadedFiles);
-          const newDocument = await generateNewPIF(originalMessage || lastMessage.content, document, countryData, uploadedFiles);
-          
-          if (newDocument) {
-            console.log('PIF generated successfully');
-            return Response.json({ 
-              type: 'document_update',
-              document: newDocument,
-              decision: decision,
-              agent: 'generating',
-              uploadedFiles: uploadedFiles,
-              countryContext: {
-                country: countryData,
-                sectionKey,
-                sectionContent,
-                error: countryLookupError,
-              },
-            });
-          }
-        } else if (decision.action === 'edit') {
-          console.log('PIF Editing triggered with files:', uploadedFiles);
-          const editedDocument = await editExistingPIF(originalMessage || lastMessage.content, document, uploadedFiles);
-          
-          if (editedDocument) {
-            console.log('PIF edited successfully');
-            return Response.json({ 
-              type: 'document_update',
-              document: editedDocument,
-              decision: decision,
-              agent: 'editing',
-              uploadedFiles: uploadedFiles,
-              countryContext: {
-                country: countryData,
-                sectionKey,
-                sectionContent,
-                error: countryLookupError,
-              },
-            });
-          }
-        }
-      } else {
-        // No files uploaded yet - ask for file upload
-        if (decision.action === 'generate' || decision.action === 'edit') {
+        // If user wants to upload but hasn't uploaded yet, ask for file upload
+        if (wantsToUpload && !hasFiles) {
           return Response.json({
             type: 'needs_file_upload',
+            action: decision.action,
+            originalMessage: lastMessage.content,
+            decision: decision,
+            countryContext: {
+              country: countryData,
+              sectionKey,
+              sectionContent,
+              error: countryLookupError,
+            },
+          });
+        }
+        
+        // Process files if provided, then proceed with generation
+        let uploadedFiles: any[] = [];
+        if (hasFiles) {
+          // Process files first
+          uploadedFiles = await processUploadedFiles(files, fileTypes, targetCountryData);
+        }
+        
+        // Now proceed with generation/editing
+        if (decision.action === 'generate') {
+          console.log('PIF Generation triggered');
+          
+          // Check database for country data
+          const finalCountryData = targetCountryData || countryData;
+          const countryName = finalCountryData?.name || extractCountryFromMessage(originalMessage || lastMessage.content) || 'Unknown';
+          const normalizedCountryName = countryName.charAt(0).toUpperCase() + countryName.slice(1);
+          
+          // Check if we have database information
+          let hasDatabaseInfo = false;
+          if (finalCountryData && finalCountryData.sections) {
+            const sections = finalCountryData.sections as { sections?: Array<{ name: string; documents: Array<any> }> } | null;
+            if (sections?.sections && sections.sections.length > 0) {
+              // Check if any section has documents
+              hasDatabaseInfo = sections.sections.some(section => 
+                section.documents && section.documents.length > 0
+              );
+            }
+          }
+          
+          // Send database lookup status
+          return Response.json({
+            type: 'database_lookup_status',
+            hasData: hasDatabaseInfo,
+            country: normalizedCountryName,
+            action: decision.action,
+            originalMessage: originalMessage || lastMessage.content,
+            decision: decision,
+            uploadedFiles: uploadedFiles,
+            filesUploaded: hasFiles,
+            countryContext: {
+              country: finalCountryData,
+              sectionKey,
+              sectionContent,
+              error: countryLookupError,
+            },
+          });
+        }
+      } else if (useExisting || skipFiles) {
+        // User wants to proceed with existing data - check database and generate
+        if (decision.action === 'generate') {
+          console.log('PIF Generation triggered - checking database');
+          
+          // Check database for country data
+          const countryName = countryData?.name || extractCountryFromMessage(originalMessage || lastMessage.content) || 'Unknown';
+          const normalizedCountryName = countryName.charAt(0).toUpperCase() + countryName.slice(1);
+          
+          // Check if we have database information
+          let hasDatabaseInfo = false;
+          if (countryData && countryData.sections) {
+            const sections = countryData.sections as { sections?: Array<{ name: string; documents: Array<any> }> } | null;
+            if (sections?.sections && sections.sections.length > 0) {
+              // Check if any section has documents
+              hasDatabaseInfo = sections.sections.some(section => 
+                section.documents && section.documents.length > 0
+              );
+            }
+          }
+          
+          // Send database lookup status
+          return Response.json({
+            type: 'database_lookup_status',
+            hasData: hasDatabaseInfo,
+            country: normalizedCountryName,
+            action: decision.action,
+            originalMessage: originalMessage || lastMessage.content,
+            decision: decision,
+            uploadedFiles: [],
+            filesUploaded: false,
+            countryContext: {
+              country: countryData,
+              sectionKey,
+              sectionContent,
+              error: countryLookupError,
+            },
+          });
+        }
+      } else {
+        // First time - ask if they want to upload files or use existing data
+        if (decision.action === 'generate') {
+          return Response.json({
+            type: 'file_upload_question',
             action: decision.action,
             originalMessage: lastMessage.content,
             decision: decision,

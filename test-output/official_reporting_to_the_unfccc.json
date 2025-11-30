@@ -1,0 +1,624 @@
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Official reporting to the UNFCCC"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "STANDARD TEXT TO BE INCLUDED: To fulfill its obligations under the UNFCCC, the country has submitted several documents related to its socio-economic development objectives. STANDARD TEXT TO BE INCLUDED END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT:[List the recommendations from the latest or ongoing NC and BURs/BTR and from international consultation and analysis (ICA) of developing country parties' BURs, as well as other eventual capacity assessment that are relevant to this CBIT project and can be addressed by its scope in the table below, keep the same structure and headings]."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "Table 2"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "Table 2 Official reporting to the UNFCCC"
+      }
+    ]
+  },
+  {
+    "type": "table",
+    "content": [
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Year"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Report"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Comments"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "EXAMPLE 2004"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "First National Communication (NC1)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Inventories for 1990 − 1994."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2010"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Second National Communication (NC2)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Inventories for 1990 − 2005."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2014"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "First Biennial Update Report (BUR1)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Inventories for 1994, 2000, 2010, as well as mitigation actions, constraints and gaps, and information on the description of domestic MRV arrangements."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2016"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Third National Communication (NC3)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Includes inventories for 1990 − 2010 but also substantive information on mitigation actions, adaptation, support received and needed and outstanding barriers and challenges."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2017"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Second Biennial Update Report (BUR2)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Inventories for 1994, 2000, 2010, 2012, as well as mitigation actions, constraints and gaps, and information on the description of domestic MRV arrangements."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2016"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Nationally Determined Contribution (NDC)"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Information on national circumstances, mitigation, and adaptation actions, means of implementation and use of markets. The NDC gained legally binding status in 2017."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "tableRow",
+        "content": [
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "2016"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "National Adaptation Plan"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "tableHeader",
+            "attrs": {
+              "colspan": 1,
+              "rowspan": 1,
+              "colwidth": null
+            },
+            "content": [
+              {
+                "type": "paragraph",
+                "content": [
+                  {
+                    "type": "text",
+                    "text": "Plan under implementation with the support of BMU and GIZ under the ProAdapta Project (2017-2022)."
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[…]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SUBSECTION"
+      }
+    ]
+  },
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 5
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Progress on the four Modules of the Enhanced Transparency Framework"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "text": "STANDARD TEXT TO BE INCLUDED:The sections below outline the country’s current status, progress, and challenges across the four core modules of the ETF. STANDARD TEXT TO BE INCLUDED END."
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SUBSECTION"
+      }
+    ]
+  }
+]

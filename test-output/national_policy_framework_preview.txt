@@ -1,0 +1,36 @@
+Section: National Policy Framework
+Indices: 36 to 47 (11 nodes)
+================================================================================
+
+[0] Heading (level 6): National Policy Framework
+    Text: National Policy Framework
+
+[1] Paragraph: PROMPT: Describe the national vision and targets on climate change and transparency through the presentation of policies (Such as the NDCs, climate change strategy, etc) and laws.
+    Text: PROMPT: Describe the national vision and targets on climate change and transparency through the presentation of policies (Such as the NDCs, climate change strategy, etc) and laws.
+
+[2] Paragraph: [500 words]
+    Text: [500 words]
+
+[3] Paragraph: [….]
+    Text: [….]
+
+[4] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+
+[5] Heading (level 6): Other key stakeholders for Climate Action
+    Text: Other key stakeholders for Climate Action
+
+[6] Paragraph: STANDARD TEXT TO BE INCLUDED: Non-government key stakeholders for Climate action are presented in Table 1. STANDARD TEXT TO BE INCLUDED END.
+    Text: STANDARD TEXT TO BE INCLUDED: Non-government key stakeholders for Climate action are presented in Table 1. STANDARD TEXT TO BE INCLUDED END.
+
+[7] Paragraph: PROMPT: fill out stakeholders’ existing activities/projects
+    Text: PROMPT: fill out stakeholders’ existing activities/projects
+
+[8] Paragraph: Table 1 Key Stakeholders for Climate Action
+    Text: Table 1 Key Stakeholders for Climate Action
+
+[9] Table: 31 rows
+
+[10] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+

@@ -1,0 +1,132 @@
+BEFORE (Original Template):
+================================================================================
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Institutional Framework for Climate Action"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: Describe the governmental institutional framework, including key ministries and agencies"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[500 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[….]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "NEW SUBSECTION"
+      }
+    ]
+  }
+]
+
+...
+
+AFTER (AI Filled):
+================================================================================
+[
+  {
+    "type": "heading",
+    "attrs": {
+      "level": 6
+    },
+    "content": [
+      {
+        "type": "text",
+        "text": "Institutional Framework for Climate Action"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "PROMPT: Describe the governmental institutional framework, including key ministries and agencies"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "[500 words]"
+      }
+    ]
+  },
+  {
+    "type": "paragraph",
+    "content": [
+      {
+        "type": "text",
+        "marks": [
+          {
+            "type": "italic"
+          }
+        ],
+        "text": "Kenya has established a robust institutional framework for climate action. The Climate Change Act of 2016 established the Climate Change Directorate within the Ministry of Environment and Forestry. This directorate is responsible for overseeing the implementation of climate policies and coordinating efforts across various sectors. The National Climate Change Council, which includes representatives from key ministries, was also formed to enhance coordination and ensure that climate action is integrated into national development plans.\n\nKey ministries involved in climate action include the Ministry of Environment and Forestry, which leads the climate agenda, and the Ministry of Energy, which focuses on promoting renewable energy sources. The Ministry of Agriculture plays a crucial role in addressing climate impacts on food security, while the Ministry of Transport and Infrastructure is involved in developing climate-resilient infrastructure. Additionally, the National Environment Management Authority (NEMA) is responsible for environmental regulation and enforcement, ensuring that climate considerations
+
+...
+

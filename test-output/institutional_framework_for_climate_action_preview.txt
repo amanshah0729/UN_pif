@@ -1,0 +1,19 @@
+Section: Institutional Framework for Climate Action
+Indices: 31 to 36 (5 nodes)
+================================================================================
+
+[0] Heading (level 6): Institutional Framework for Climate Action
+    Text: Institutional Framework for Climate Action
+
+[1] Paragraph: PROMPT: Describe the governmental institutional framework, including key ministries and agencies
+    Text: PROMPT: Describe the governmental institutional framework, including key ministries and agencies
+
+[2] Paragraph: [500 words]
+    Text: [500 words]
+
+[3] Paragraph: [….]
+    Text: [….]
+
+[4] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+

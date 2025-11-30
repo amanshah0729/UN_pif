@@ -1,0 +1,39 @@
+Section: NDC Tracking
+Indices: 83 to 95 (12 nodes)
+================================================================================
+
+[0] Heading (level 6): NDC Tracking Module
+    Text: NDC Tracking Module
+
+[1] Paragraph: PROMPT: This is the baseline of component 2, output 2.3.
+    Text: PROMPT: This is the baseline of component 2, output 2.3.
+
+[2] Paragraph: [400 words]
+    Text: [400 words]
+
+[3] paragraph
+
+[4] Paragraph: [….]
+    Text: [….]
+
+[5] Paragraph: EXAMPLE: The Country’s NDC outlines 47 mitigation and 13 adaptation actions across sectors, including energy, transport, waste, industry, agriculture, water, and forestry, with quantified emission red...
+    Text: EXAMPLE: The Country’s NDC outlines 47 mitigation and 13 adaptation actions across sectors, including energy, transport, waste, industry, agriculture, water, and forestry, with quantified emission reduction targets that are both conditional and unconditional. While the country has made progress in d...
+
+[6] Paragraph: The GEF-6 CBIT 1 project was foundational in operationalizing The Country’s MRV system and integrating climate tracking into national planning. Through the The Country Climate Ambitious Reporting Prog...
+    Text: The GEF-6 CBIT 1 project was foundational in operationalizing The Country’s MRV system and integrating climate tracking into national planning. Through the The Country Climate Ambitious Reporting Programme (CARP), CBIT 1 piloted an early version of the NDC tracking system. It supported the developme...
+
+[7] Paragraph: Despite these early gains, The Country’s BTR1 and the CBIT 1 Terminal Review indicate that tracking of NDC actions remains limited in scope and uptake. Although the EPA leads overall coordination, sec...
+    Text: Despite these early gains, The Country’s BTR1 and the CBIT 1 Terminal Review indicate that tracking of NDC actions remains limited in scope and uptake. Although the EPA leads overall coordination, sector ministries lack the mandate, capacity, and technical tools to systematically monitor their NDC c...
+
+[8] Paragraph: According to BTR1, while many NDC actions are implemented through sectoral or donor-funded programmes, there is no national mechanism to track outcomes or ensure alignment with NDC targets. This gap i...
+    Text: According to BTR1, while many NDC actions are implemented through sectoral or donor-funded programmes, there is no national mechanism to track outcomes or ensure alignment with NDC targets. This gap is particularly acute for adaptation actions implemented at the subnational level, where data collect...
+
+[9] Paragraph: Institutional fragmentation remains a significant challenge. While the EPA is designated the national coordinating body for climate reporting, it lacks enforcement authority over sectoral agencies. ND...
+    Text: Institutional fragmentation remains a significant challenge. While the EPA is designated the national coordinating body for climate reporting, it lacks enforcement authority over sectoral agencies. NDPC, although central to national development monitoring, does not yet integrate NDC targets into its...
+
+[10] Paragraph: Subnational actors are largely excluded from NDC tracking. MMDAs, key to adaptation implementation, were only marginally involved in CBIT 1, leaving capacity gaps that require targeted follow-up. The ...
+    Text: Subnational actors are largely excluded from NDC tracking. MMDAs, key to adaptation implementation, were only marginally involved in CBIT 1, leaving capacity gaps that require targeted follow-up. The First Updated NDC and BTR1 stress the urgent need to establish a national NDC tracking system with s...
+
+[11] Paragraph: NEW SUBSECTION
+    Text: NEW SUBSECTION
+
