@@ -45,10 +45,19 @@ export function PifDashboard() {
     setDocument(convertProseMirrorToDocument(json))
   }, [])
 
-  const handleDocumentGenerated = useCallback((updatedDoc: any) => {
-    setDocument(updatedDoc)
-    const updatedContent = convertDocumentToProseMirror(updatedDoc)
-    setEditorContent(updatedContent)
+  const handleDocumentGenerated = useCallback((proseMirrorJson: any) => {
+    // The API now returns ProseMirror JSON directly (like the template)
+    // So we can use it directly without conversion
+    setEditorContent(proseMirrorJson)
+    // Extract title from ProseMirror JSON for the document state
+    const titleHeading = proseMirrorJson.content?.find(
+      (node: any) => node.type === 'heading' && node.attrs?.level === 1
+    )
+    const title = titleHeading?.content?.map((n: any) => n.text || '').join('') || 'Project Information Form'
+    setDocument({
+      title,
+      sections: [] // Not needed anymore since we use ProseMirror JSON directly
+    })
   }, [])
 
   return (

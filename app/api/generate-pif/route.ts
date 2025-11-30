@@ -414,20 +414,45 @@ async function generateNewPIF(country: string, countryData: any = null) {
   // Replace [Country] placeholders in remaining content
   filledContent = filledContent.map((node: any) => replaceCountryPlaceholders(node, normalizedCountry));
   
-  // Create filled template
+  // Create filled template (ProseMirror JSON format)
   const filledTemplate = {
     ...template,
     content: filledContent,
   };
 
-  // Step 3: Convert to document format
-  const { convertProseMirrorToDocument } = await import('@/lib/document-converter');
-  const document = convertProseMirrorToDocument(filledTemplate);
+  // Update title in ProseMirror JSON format
+  // Find the title heading (level 1) and update it
+  const titleHeadingIndex = filledContent.findIndex(
+    (node: any) => node.type === 'heading' && node.attrs?.level === 1
+  );
   
-  // Update title with country name
-  document.title = `GEF-8 PROJECT IDENTIFICATION FORM (PIF) - ${normalizedCountry}`;
+  if (titleHeadingIndex >= 0) {
+    filledContent[titleHeadingIndex] = {
+      type: 'heading',
+      attrs: { level: 1 },
+      content: [
+        {
+          type: 'text',
+          text: `GEF-8 PROJECT IDENTIFICATION FORM (PIF) - ${normalizedCountry}`
+        }
+      ]
+    };
+  } else {
+    // If no title heading exists, add one at the beginning
+    filledContent.unshift({
+      type: 'heading',
+      attrs: { level: 1 },
+      content: [
+        {
+          type: 'text',
+          text: `GEF-8 PROJECT IDENTIFICATION FORM (PIF) - ${normalizedCountry}`
+        }
+      ]
+    });
+  }
 
-  return { document, logEntries };
+  // Return ProseMirror JSON directly (no conversion needed - preserves tables and all formatting)
+  return { document: filledTemplate, logEntries };
 }
 
 export async function POST(req: Request) {
@@ -541,8 +566,15 @@ export async function POST(req: Request) {
 
     console.log(`[PIF Generation] ✓ PIF generation complete for ${normalizedCountry}`);
 
+    // Extract title from ProseMirror JSON for response metadata
+    const titleHeading = document.content?.find(
+      (node: any) => node.type === 'heading' && node.attrs?.level === 1
+    );
+    const title = titleHeading?.content?.map((n: any) => n.text || '').join('') || `GEF-8 PROJECT IDENTIFICATION FORM (PIF) - ${normalizedCountry}`;
+
     return Response.json({
-      document,
+      document, // ProseMirror JSON format (preserves tables and all formatting)
+      title, // Extracted title for convenience
       country: normalizedCountry,
       hasDatabaseData: countryData && countryData.sections ? true : false,
       logEntries: responseLogEntries,
