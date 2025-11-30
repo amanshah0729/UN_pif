@@ -81,13 +81,13 @@ export function GenerationLog({ entries, isProcessing }: GenerationLogProps) {
                             <DialogHeader className="shrink-0">
                               <DialogTitle>Database Data</DialogTitle>
                             </DialogHeader>
-                            <div className="flex-1 min-h-0 overflow-hidden">
-                              <ScrollArea className="h-full w-full">
-                                <pre className="text-xs bg-muted p-4 rounded-lg whitespace-pre-wrap break-words">
+                            <ScrollArea className="flex-1 min-h-0 border rounded-md bg-muted/50">
+                              <div className="p-4">
+                                <pre className="text-xs font-mono whitespace-pre-wrap break-words overflow-wrap-anywhere">
                                   {JSON.stringify(entry.databaseData, null, 2)}
                                 </pre>
-                              </ScrollArea>
-                            </div>
+                              </div>
+                            </ScrollArea>
                           </DialogContent>
                         </Dialog>
                       )}

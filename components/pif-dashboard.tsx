@@ -17,6 +17,7 @@ export function PifDashboard() {
     sections: []
   })
   const [isLoadingTemplate, setIsLoadingTemplate] = useState(true)
+  const [logEntries, setLogEntries] = useState<any[]>([])
 
   // Load default template on mount
   useEffect(() => {
@@ -60,11 +61,19 @@ export function PifDashboard() {
     })
   }, [])
 
+  const handleAddLogEntry = useCallback((entry: any) => {
+    setLogEntries(prev => [...prev, entry])
+  }, [])
+
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* PIF Generator Form - Left Side */}
       <div className="w-2/5 border-r border-border h-screen overflow-hidden">
-        <PifGeneratorForm onDocumentGenerated={handleDocumentGenerated} />
+        <PifGeneratorForm 
+          onDocumentGenerated={handleDocumentGenerated}
+          onAddLogEntry={handleAddLogEntry}
+          externalLogEntries={logEntries}
+        />
       </div>
 
       {/* Document Viewer - Right Side */}
@@ -73,6 +82,7 @@ export function PifDashboard() {
           title={document.title}
           content={isLoadingTemplate ? null : editorContent}
           onDocumentChange={handleDocumentChange}
+          onAddLogEntry={handleAddLogEntry}
         />
       </div>
     </div>

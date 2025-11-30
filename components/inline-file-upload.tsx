@@ -64,23 +64,23 @@ export function InlineFileUpload({ onFilesChange }: InlineFileUploadProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="border rounded-lg">
-        <div className="grid grid-cols-2 gap-4 p-4 border-b bg-muted/50">
-          <div className="font-medium text-sm">File Type</div>
-          <div className="font-medium text-sm">File</div>
+        <div className="grid grid-cols-2 gap-3 p-2 border-b bg-muted/50">
+          <div className="font-medium text-xs">File Type</div>
+          <div className="font-medium text-xs">File</div>
         </div>
         
         <div className="divide-y">
           {fileRows.map((row) => (
-            <div key={row.id} className="grid grid-cols-2 gap-4 p-4 items-center">
+            <div key={row.id} className="grid grid-cols-2 gap-3 p-2 items-center">
               <div>
                 <Select
                   value={row.fileType}
                   onValueChange={(value) => handleFileTypeChange(row.id, value)}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select file type" />
+                  <SelectTrigger className="w-full h-8 text-sm">
+                    <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
                     {FILE_TYPES.map(type => (
@@ -92,7 +92,7 @@ export function InlineFileUpload({ onFilesChange }: InlineFileUploadProps) {
                 </Select>
               </div>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1">
                 <div className="flex-1">
                   <Input
                     type="file"
@@ -101,7 +101,7 @@ export function InlineFileUpload({ onFilesChange }: InlineFileUploadProps) {
                       const file = e.target.files?.[0] || null
                       handleFileChange(row.id, file)
                     }}
-                    className="cursor-pointer"
+                    className="cursor-pointer h-8 text-xs"
                   />
                 </div>
                 {fileRows.length > 1 && (
@@ -109,34 +109,34 @@ export function InlineFileUpload({ onFilesChange }: InlineFileUploadProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => handleRemoveRow(row.id)}
-                    className="shrink-0"
+                    className="shrink-0 h-7 w-7"
                     type="button"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-3 w-3" />
                   </Button>
                 )}
               </div>
               
               {row.file && (
-                <div className="col-span-2 text-xs text-muted-foreground flex items-center gap-2">
+                <div className="col-span-2 text-xs text-muted-foreground flex items-center gap-1 px-1">
                   <Upload className="h-3 w-3" />
-                  {row.file.name} ({(row.file.size / 1024 / 1024).toFixed(2)} MB)
+                  <span className="truncate">{row.file.name}</span>
                 </div>
               )}
             </div>
           ))}
         </div>
         
-        <div className="p-4 border-t">
+        <div className="p-2 border-t">
           <Button
             variant="outline"
             size="sm"
             onClick={handleAddRow}
-            className="w-full"
+            className="w-full h-8 text-xs"
             type="button"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Another File
+            <Plus className="h-3 w-3 mr-1" />
+            Add File
           </Button>
         </div>
       </div>

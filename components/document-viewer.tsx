@@ -1,16 +1,152 @@
 "use client"
 
-import { FileText } from "lucide-react"
+import { useState } from "react"
+import { FileText, Download, Loader2 } from "lucide-react"
 import { RichTextEditor } from "./rich-text-editor"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Button } from "@/components/ui/button"
+import { EditPifModal } from "./edit-pif-modal"
 
 interface DocumentViewerProps {
   title?: string
   content: any | null
   onDocumentChange?: (json: any) => void
+  onAddLogEntry?: (entry: { id: string; timestamp: Date; type: 'info' | 'success' | 'warning' | 'error' | 'section'; message: string; section?: string }) => void
 }
 
-export function DocumentViewer({ title = "Project Information Form", content, onDocumentChange }: DocumentViewerProps) {
+export function DocumentViewer({ title = "Project Information Form", content, onDocumentChange, onAddLogEntry }: DocumentViewerProps) {
+  const [isDownloading, setIsDownloading] = useState(false)
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+
+  const handleEditSubmit = async (sections: string[], editInstructions: string) => {
+    if (!content) {
+      if (onAddLogEntry) {
+        onAddLogEntry({
+          id: `edit-error-${Date.now()}`,
+          timestamp: new Date(),
+          type: 'error',
+          message: 'No document to edit. Please generate a PIF first.',
+        })
+      }
+      return
+    }
+
+    // Add log entry for edit submission
+    if (onAddLogEntry) {
+      onAddLogEntry({
+        id: `edit-submit-${Date.now()}`,
+        timestamp: new Date(),
+        type: 'info',
+        message: `Submitting edits for sections: ${sections.join(', ')}`,
+      })
+    }
+
+    setIsSubmittingEdit(true)
+    try {
+      console.log(`[Edit] Submitting edits for sections: ${sections.join(', ')}`)
+      
+      const response = await fetch('/api/edit-pif', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          proseMirrorJson: content,
+          sections,
+          editInstructions,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Failed to edit PIF' }))
+        throw new Error(errorData.error || 'Failed to edit PIF')
+      }
+
+      const data = await response.json()
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
+
+      // Update the document with edited content
+      if (data.document && onDocumentChange) {
+        onDocumentChange(data.document)
+      }
+
+      // Add log entry for successful edit completion
+      if (onAddLogEntry) {
+        if (data.failedEdits && data.failedEdits.length > 0) {
+          onAddLogEntry({
+            id: `edit-partial-${Date.now()}`,
+            timestamp: new Date(),
+            type: 'warning',
+            message: `Edits completed with some issues. Successful: ${data.successfulEdits.join(', ')}. Failed: ${data.failedEdits.join(', ')}`,
+          })
+        } else {
+          onAddLogEntry({
+            id: `edit-success-${Date.now()}`,
+            timestamp: new Date(),
+            type: 'success',
+            message: `Successfully edited sections: ${data.successfulEdits.join(', ')}`,
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Error submitting edits:', error)
+      if (onAddLogEntry) {
+        onAddLogEntry({
+          id: `edit-error-${Date.now()}`,
+          timestamp: new Date(),
+          type: 'error',
+          message: error instanceof Error ? error.message : 'Failed to submit edits. Please try again.',
+        })
+      }
+    } finally {
+      setIsSubmittingEdit(false)
+    }
+  }
+
+  const handleDownload = async () => {
+    if (!content) return
+
+    setIsDownloading(true)
+    try {
+      // Extract filename from title
+      const filename = title.replace(/[^a-zA-Z0-9]/g, '_') + '.docx'
+
+      const response = await fetch('/api/download-pif', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          proseMirrorJson: content,
+          filename,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to download document')
+      }
+
+      // Get the blob and create download link
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+    } catch (error) {
+      console.error('Error downloading document:', error)
+      alert('Failed to download document. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
   if (!content) {
     return (
       <div className="flex flex-col h-full">
@@ -75,9 +211,36 @@ export function DocumentViewer({ title = "Project Information Form", content, on
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-border bg-card px-8 py-4 flex items-center gap-3">
-        <FileText className="h-5 w-5 text-primary" />
-        <h1 className="text-lg font-semibold text-card-foreground">{title}</h1>
+      <div className="border-b border-border bg-card px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <FileText className="h-5 w-5 text-primary" />
+          <h1 className="text-lg font-semibold text-card-foreground">{title}</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <EditPifModal 
+            onEditSubmit={handleEditSubmit}
+            isSubmitting={isSubmittingEdit}
+          />
+          <Button
+            onClick={handleDownload}
+            disabled={isDownloading || !content}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            {isDownloading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Downloading...
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                Download DOCX
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 bg-muted/30 overflow-hidden">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,11 +11,13 @@ import { GenerationLog, type LogEntry } from "./generation-log"
 
 interface PifGeneratorFormProps {
   onDocumentGenerated: (document: any) => void
+  onAddLogEntry?: (entry: LogEntry) => void
+  externalLogEntries?: LogEntry[]
 }
 
 type Status = 'idle' | 'processing-files' | 'checking-database' | 'generating' | 'success' | 'error'
 
-export function PifGeneratorForm({ onDocumentGenerated }: PifGeneratorFormProps) {
+export function PifGeneratorForm({ onDocumentGenerated, onAddLogEntry, externalLogEntries = [] }: PifGeneratorFormProps) {
   const [country, setCountry] = useState("")
   const [files, setFiles] = useState<File[]>([])
   const [fileTypes, setFileTypes] = useState<string[]>([])
@@ -23,6 +25,17 @@ export function PifGeneratorForm({ onDocumentGenerated }: PifGeneratorFormProps)
   const [statusMessage, setStatusMessage] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [logEntries, setLogEntries] = useState<LogEntry[]>([])
+
+  // Merge external log entries (from edits) with local log entries, avoiding duplicates
+  const allLogEntries = useMemo(() => {
+    const entryMap = new Map<string, LogEntry>()
+    // Add local entries first
+    logEntries.forEach(entry => entryMap.set(entry.id, entry))
+    // Add external entries (will overwrite if duplicate, but that's fine)
+    externalLogEntries.forEach(entry => entryMap.set(entry.id, entry))
+    // Sort by timestamp
+    return Array.from(entryMap.values()).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
+  }, [logEntries, externalLogEntries])
 
   const handleFilesChange = (newFiles: File[], newFileTypes: string[]) => {
     setFiles(newFiles)
@@ -128,6 +141,8 @@ export function PifGeneratorForm({ onDocumentGenerated }: PifGeneratorFormProps)
           databaseData: entry.databaseData, // Include database data
         }))
         setLogEntries(prev => [...prev, ...formattedEntries])
+        // Also add to parent log if callback provided (for sharing with edit logs)
+        formattedEntries.forEach(entry => onAddLogEntry?.(entry))
       }
 
       // Success!
@@ -156,76 +171,69 @@ export function PifGeneratorForm({ onDocumentGenerated }: PifGeneratorFormProps)
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-border bg-card px-6 py-4 shrink-0">
-        <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-primary" />
+      <div className="border-b border-border bg-card px-4 py-2 shrink-0">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
           <div>
-            <h2 className="text-lg font-semibold text-card-foreground">Create New PIF</h2>
-            <p className="text-sm text-muted-foreground">Generate a Project Information Form for your country</p>
+            <h2 className="text-base font-semibold text-card-foreground">Create New PIF</h2>
+            <p className="text-xs text-muted-foreground">Generate a Project Information Form</p>
           </div>
         </div>
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 overflow-y-auto p-6 border-b border-border">
-        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 border-b border-border">
+        <form onSubmit={handleSubmit} className="max-w-2xl mx-auto space-y-3">
           {/* Country Input */}
-          <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
+          <div className="space-y-1">
+            <Label htmlFor="country" className="text-sm">Country</Label>
             <Input
               id="country"
               type="text"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               placeholder="Enter country name (e.g., Kenya, Pakistan, Cuba)"
-              className="w-full"
+              className="w-full h-9"
               disabled={isLoading}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              Enter the name of the country for which you want to generate a PIF
-            </p>
           </div>
 
           {/* File Upload Section */}
-          <div className="space-y-2">
-            <Label>Reference Documents (Optional)</Label>
-            <p className="text-xs text-muted-foreground mb-4">
-              Upload PDF or DOCX documents that the AI can reference when generating your PIF. 
-              Documents will be parsed and relevant information will be extracted and stored.
-            </p>
+          <div className="space-y-1">
+            <Label className="text-sm">Reference Documents (Optional)</Label>
             <InlineFileUpload onFilesChange={handleFilesChange} />
           </div>
 
           {/* Status Messages */}
           {statusMessage && (
-            <Alert className={status === 'error' ? 'border-destructive' : ''}>
+            <Alert className={status === 'error' ? 'border-destructive' : 'py-2'}>
               {status === 'processing-files' || status === 'checking-database' || status === 'generating' ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-3 w-3 animate-spin mr-2" />
               ) : status === 'success' ? (
-                <CheckCircle2 className="h-4 w-4 text-green-600 mr-2" />
+                <CheckCircle2 className="h-3 w-3 text-green-600 mr-2" />
               ) : status === 'error' ? (
-                <AlertCircle className="h-4 w-4 text-destructive mr-2" />
+                <AlertCircle className="h-3 w-3 text-destructive mr-2" />
               ) : null}
-              <AlertDescription>{statusMessage}</AlertDescription>
+              <AlertDescription className="text-xs">{statusMessage}</AlertDescription>
             </Alert>
           )}
 
           {/* Error Message */}
           {error && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className="py-2">
+              <AlertCircle className="h-3 w-3" />
+              <AlertDescription className="text-xs">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Submit Button */}
-          <div className="pt-4">
+          <div className="pt-2">
             <Button
               type="submit"
               className="w-full"
               disabled={isLoading || !country.trim()}
-              size="lg"
+              size="default"
             >
               {isLoading ? (
                 <>
@@ -243,7 +251,7 @@ export function PifGeneratorForm({ onDocumentGenerated }: PifGeneratorFormProps)
       </div>
 
       {/* Generation Log */}
-      <GenerationLog entries={logEntries} isProcessing={isLoading} />
+      <GenerationLog entries={allLogEntries} isProcessing={isLoading} />
     </div>
   )
 }
