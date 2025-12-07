@@ -107,7 +107,7 @@ export function PifGeneratorForm({ onDocumentGenerated, onAddLogEntry, externalL
 
       // Step 2: Generate PIF
       setStatus('generating')
-      setStatusMessage("Generating your PIF document... This may take up to 5 minutes.")
+      setStatusMessage("Generating your PIF document... This will take about 5-10 minutes.")
 
       const generateFormData = new FormData()
       generateFormData.append('country', country.trim())

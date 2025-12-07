@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { extractText } from 'unpdf';
 import fs from 'fs';
 import path from 'path';
+import { getSectionAdditionalContext } from '@/lib/section-prompts';
 
 // Chat Agent - Handles conversational responses
 async function getChatResponse(messages: any[], document: any) {
@@ -76,12 +77,21 @@ function extractSectionFromMessage(userMessage: string): string | null {
 }
 
 async function generateSectionParagraph({sectionTitle, instructions, country}: {sectionTitle:string, instructions:string, country:string}) {
+  // Check if there's additional context from section-prompts.ts
+  const additionalContext = getSectionAdditionalContext(sectionTitle, country);
+  
+  // Build the prompt with base instructions
+  let prompt = `You are drafting a section for a UN Project Information Form (PIF).\n\nSection: ${sectionTitle}\nCountry: ${country}\n\n${instructions}\n\nReturn a professional, concise, and informative essay with a minimum of 400 words written in the style of international project documents.
+    Keep the structure of the document the exact same. Use only these sources: – UNFCCC reports portal (BTR/NC/BUR/NIR for the country) https://www.thegef.org/projects-operations/database?f%5B0%5D=capacity_building_initiative_for_transparency%3A2071&f%5B1%5D=implementing_agencies%3A605 – ICAT (climateactiontransparency.org) country pages/reports https://unfccc.int/reports – PATPA (transparency-partnership.net) knowledge products/Good Practice DB https://climateactiontransparency.org – GEF/CBIT documents on thegef.org https://transparency-partnership.net/ Do not use any other sources. If required info is missing, say so explicitly and point to the specific PDF/URL within these sites where it likely exists. No hallucinations. Follow the PIF template's wording, length limits, and tone for each section.`;
+  
+  // Add additional context if available
+  if (additionalContext) {
+    prompt += `\n\n**ADDITIONAL SECTION-SPECIFIC CONTEXT:**\n\n${additionalContext}`;
+  }
+  
   const result = await generateText({
     model: openai('gpt-4o-mini'),
-    prompt: `You are drafting a section for a UN Project Information Form (PIF).\n\nSection: ${sectionTitle}\nCountry: ${country}\n\n${instructions}\n\nReturn a professional, concise, and informative essay with a minimum of 400 words written in the style of international project documents.
-    Keep the structure of the document the exact same. Use only these sources: – UNFCCC reports portal (BTR/NC/BUR/NIR for the country) https://www.thegef.org/projects-operations/database?f%5B0%5D=capacity_building_initiative_for_transparency%3A2071&f%5B1%5D=implementing_agencies%3A605 – ICAT (climateactiontransparency.org) country pages/reports https://unfccc.int/reports – PATPA (transparency-partnership.net) knowledge products/Good Practice DB https://climateactiontransparency.org – GEF/CBIT documents on thegef.org https://transparency-partnership.net/ Do not use any other sources. If required info is missing, say so explicitly and point to the specific PDF/URL within these sites where it likely exists. No hallucinations. Follow the PIF template’s wording, length limits, and tone for each section.
-    
-    `,
+    prompt,
   });
   return result.text.trim();
 }

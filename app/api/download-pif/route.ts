@@ -273,8 +273,11 @@ export async function POST(req: NextRequest) {
     const title = titleHeading?.content?.map((n: any) => n.text || '').join('') || 'PIF';
     const safeFilename = filename || title.replace(/[^a-zA-Z0-9]/g, '_') + '.docx';
 
+    // Convert Buffer to Uint8Array for NextResponse
+    const uint8Array = new Uint8Array(buffer);
+
     // Return DOCX file
-    return new NextResponse(buffer, {
+    return new NextResponse(uint8Array, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${safeFilename}"`,
