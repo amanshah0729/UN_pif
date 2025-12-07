@@ -88,28 +88,56 @@ async function parseDocumentAndExtractSections(
 async function updateCountrySections(
   countryName: string,
   docType: string,
-  extractedSections: Record<string, string>
+  extractedSections: Record<string, string>,
+  countryId?: number
 ): Promise<void> {
-  // Get or create country record
-  let { country, error } = await getCountryByName(countryName);
+  console.log(`[updateCountrySections] Starting update for ${countryName}, docType: ${docType}`);
+  console.log(`[updateCountrySections] Extracted sections count: ${Object.keys(extractedSections).length}`);
   
-  if (error || !country) {
-    // Create new country record
-    const { data: newCountry, error: createError } = await supabase
+  let country: { id: number; name: string; sections: any } | null = null;
+  
+  // If countryId is provided, use it directly (more reliable)
+  if (countryId) {
+    console.log(`[updateCountrySections] Using provided country ID: ${countryId}`);
+    const { data, error } = await supabase
       .from('countries')
-      .insert({
-        name: countryName,
-        sections: { sections: [] }
-      })
-      .select()
+      .select('id, name, sections')
+      .eq('id', countryId)
       .single();
     
-    if (createError || !newCountry) {
-      console.error('Error creating country:', createError);
-      throw new Error(`Failed to create country: ${createError?.message || 'Unknown error'}`);
+    if (error || !data) {
+      console.error('[updateCountrySections] Error fetching country by ID:', error);
+      throw new Error(`Failed to fetch country by ID: ${error?.message || 'Unknown error'}`);
     }
+    country = data;
+    console.log(`[updateCountrySections] Found country record with id: ${country.id}, name: ${country.name}`);
+  } else {
+    // Fallback: Get or create country record by name
+    let { country: foundCountry, error } = await getCountryByName(countryName);
     
-    country = newCountry;
+    if (error || !foundCountry) {
+      console.log(`[updateCountrySections] Country not found, creating new record for: ${countryName}`);
+      // Create new country record
+      const { data: newCountry, error: createError } = await supabase
+        .from('countries')
+        .insert({
+          name: countryName,
+          sections: { sections: [] }
+        })
+        .select()
+        .single();
+      
+      if (createError || !newCountry) {
+        console.error('[updateCountrySections] Error creating country:', createError);
+        throw new Error(`Failed to create country: ${createError?.message || 'Unknown error'}`);
+      }
+      
+      console.log(`[updateCountrySections] Created new country record with id: ${newCountry.id}`);
+      country = newCountry;
+    } else {
+      console.log(`[updateCountrySections] Found existing country record with id: ${foundCountry.id}`);
+      country = foundCountry;
+    }
   }
   
   if (!country) {
@@ -119,7 +147,9 @@ async function updateCountrySections(
   // Get existing sections structure
   const existingData = country.sections as { sections?: Array<{ name: string; documents: Array<{ doc_type: string; extracted_text: string }> }> } | null;
   const sectionsArray = existingData?.sections || [];
+  console.log(`[updateCountrySections] Existing sections count: ${sectionsArray.length}`);
   
+  let sectionsUpdated = 0;
   // Update each section with new document
   SECTION_NAMES.forEach((sectionName) => {
     const extractedText = extractedSections[sectionName];
@@ -138,6 +168,7 @@ async function updateCountrySections(
         documents: []
       };
       sectionsArray.push(section);
+      console.log(`[updateCountrySections] Created new section: ${sectionName}`);
     }
     
     // Append new document to section
@@ -145,20 +176,33 @@ async function updateCountrySections(
       doc_type: docType,
       extracted_text: extractedText
     });
+    sectionsUpdated++;
+    console.log(`[updateCountrySections] Added document to section: ${sectionName} (doc_type: ${docType}, text length: ${extractedText.length})`);
   });
   
+  console.log(`[updateCountrySections] Total sections updated: ${sectionsUpdated}`);
+  console.log(`[updateCountrySections] Total sections in array: ${sectionsArray.length}`);
+  
   // Update country record with new sections structure
-  const { error: updateError } = await supabase
+  const { error: updateError, data: updatedData } = await supabase
     .from('countries')
     .update({
       sections: { sections: sectionsArray }
     })
-    .eq('id', country.id);
+    .eq('id', country.id)
+    .select();
   
   if (updateError) {
-    console.error('Error updating country sections:', updateError);
+    console.error('[updateCountrySections] Error updating country sections:', updateError);
     throw new Error(`Failed to update country sections: ${updateError.message}`);
   }
+  
+  if (!updatedData || updatedData.length === 0) {
+    console.error('[updateCountrySections] No data returned from update');
+    throw new Error('Failed to update country sections: No data returned');
+  }
+  
+  console.log(`[updateCountrySections] ✓ Successfully updated country ${countryName} with ${sectionsUpdated} sections`);
 }
 
 // Process uploaded files: parse and extract sections
@@ -203,42 +247,76 @@ async function processUploadedFiles(files: File[], fileTypes: string[], countryD
       }
       
       // Extract sections using AI subagents and update database
-      if (pdfText && countryData) {
-        try {
-          const extractedSections = await parseDocumentAndExtractSections(
-            pdfText,
-            fileType,
-            countryData.name
-          );
-          
-          // Update database with extracted sections
-          await updateCountrySections(
-            countryData.name,
-            fileType,
-            extractedSections
-          );
-          
-          processedFiles.push({
-            fileName: file.name,
-            fileType: fileType,
-            success: true,
-          });
-        } catch (error) {
-          console.error(`Error extracting sections from ${file.name}:`, error);
-          processedFiles.push({
-            fileName: file.name,
-            fileType: fileType,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      } else {
-        console.warn(`Skipping ${file.name}: missing text content or country data`);
+      if (!pdfText || pdfText.trim().length === 0) {
+        console.warn(`[processUploadedFiles] Skipping ${file.name}: no text content extracted`);
         processedFiles.push({
           fileName: file.name,
           fileType: fileType,
           success: false,
-          error: 'Missing text content or country data',
+          error: 'No text content could be extracted from the file',
+        });
+        continue;
+      }
+      
+      if (!countryData || !countryData.name) {
+        console.warn(`[processUploadedFiles] Skipping ${file.name}: missing country data`);
+        processedFiles.push({
+          fileName: file.name,
+          fileType: fileType,
+          success: false,
+          error: 'Missing country data',
+        });
+        continue;
+      }
+      
+      try {
+        console.log(`[processUploadedFiles] Extracting sections from ${file.name} for country: ${countryData.name}`);
+        const extractedSections = await parseDocumentAndExtractSections(
+          pdfText,
+          fileType,
+          countryData.name
+        );
+        
+        const extractedCount = Object.keys(extractedSections).filter(
+          key => extractedSections[key] && extractedSections[key].trim().length > 0
+        ).length;
+        console.log(`[processUploadedFiles] Extracted ${extractedCount} sections from ${file.name}`);
+        
+        if (extractedCount === 0) {
+          console.warn(`[processUploadedFiles] No sections extracted from ${file.name}`);
+          processedFiles.push({
+            fileName: file.name,
+            fileType: fileType,
+            success: false,
+            error: 'No relevant content could be extracted for any sections',
+          });
+          continue;
+        }
+        
+        // Update database with extracted sections
+        console.log(`[processUploadedFiles] Updating database for ${file.name}`);
+        await updateCountrySections(
+          countryData.name,
+          fileType,
+          extractedSections,
+          countryData.id // Pass the country ID directly for more reliable lookup
+        );
+        
+        console.log(`[processUploadedFiles] ✓ Successfully processed ${file.name}`);
+        processedFiles.push({
+          fileName: file.name,
+          fileType: fileType,
+          success: true,
+        });
+      } catch (error) {
+        console.error(`[processUploadedFiles] Error processing ${file.name}:`, error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`[processUploadedFiles] Error details:`, errorMessage);
+        processedFiles.push({
+          fileName: file.name,
+          fileType: fileType,
+          success: false,
+          error: errorMessage,
         });
       }
     } catch (error) {
@@ -306,13 +384,18 @@ export async function POST(req: Request) {
 
     // Process files
     console.log(`[File Processing] Starting extraction and upload for ${normalizedCountry}`);
+    console.log(`[File Processing] Country record ID: ${existingCountry.id}, Name: ${existingCountry.name}`);
     console.log(`[File Processing] Files: ${files.map(f => f.name).join(', ')}`);
     console.log(`[File Processing] File types: ${fileTypes.join(', ')}`);
+    
+    // Ensure we use the exact country name from the database record
+    const countryNameForProcessing = existingCountry.name;
+    console.log(`[File Processing] Using country name: ${countryNameForProcessing}`);
     
     const processedFiles = await processUploadedFiles(files, fileTypes, existingCountry);
     
     // Refresh country data after processing files to get newly extracted sections
-    const { country: updatedCountry } = await getCountryByName(normalizedCountry);
+    const { country: updatedCountry } = await getCountryByName(countryNameForProcessing);
     
     console.log(`[File Processing] ✓ Finished extracting info and uploading files for ${normalizedCountry}`);
     

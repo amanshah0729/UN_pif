@@ -379,28 +379,56 @@ async function parseDocumentAndExtractSections(
 async function updateCountrySections(
   countryName: string,
   docType: string,
-  extractedSections: Record<string, string>
+  extractedSections: Record<string, string>,
+  countryId?: number
 ): Promise<void> {
-  // Get or create country record
-  let { country, error } = await getCountryByName(countryName);
+  console.log(`[updateCountrySections] Starting update for ${countryName}, docType: ${docType}`);
+  console.log(`[updateCountrySections] Extracted sections count: ${Object.keys(extractedSections).length}`);
   
-  if (error || !country) {
-    // Create new country record
-    const { data: newCountry, error: createError } = await supabase
+  let country: { id: number; name: string; sections: any } | null = null;
+  
+  // If countryId is provided, use it directly (more reliable)
+  if (countryId) {
+    console.log(`[updateCountrySections] Using provided country ID: ${countryId}`);
+    const { data, error } = await supabase
       .from('countries')
-      .insert({
-        name: countryName,
-        sections: { sections: [] }
-      })
-      .select()
+      .select('id, name, sections')
+      .eq('id', countryId)
       .single();
     
-    if (createError || !newCountry) {
-      console.error('Error creating country:', createError);
-      throw new Error(`Failed to create country: ${createError?.message || 'Unknown error'}`);
+    if (error || !data) {
+      console.error('[updateCountrySections] Error fetching country by ID:', error);
+      throw new Error(`Failed to fetch country by ID: ${error?.message || 'Unknown error'}`);
     }
+    country = data;
+    console.log(`[updateCountrySections] Found country record with id: ${country.id}, name: ${country.name}`);
+  } else {
+    // Fallback: Get or create country record by name
+    let { country: foundCountry, error } = await getCountryByName(countryName);
     
-    country = newCountry;
+    if (error || !foundCountry) {
+      console.log(`[updateCountrySections] Country not found, creating new record for: ${countryName}`);
+      // Create new country record
+      const { data: newCountry, error: createError } = await supabase
+        .from('countries')
+        .insert({
+          name: countryName,
+          sections: { sections: [] }
+        })
+        .select()
+        .single();
+      
+      if (createError || !newCountry) {
+        console.error('[updateCountrySections] Error creating country:', createError);
+        throw new Error(`Failed to create country: ${createError?.message || 'Unknown error'}`);
+      }
+      
+      console.log(`[updateCountrySections] Created new country record with id: ${newCountry.id}`);
+      country = newCountry;
+    } else {
+      console.log(`[updateCountrySections] Found existing country record with id: ${foundCountry.id}`);
+      country = foundCountry;
+    }
   }
   
   if (!country) {
@@ -410,7 +438,9 @@ async function updateCountrySections(
   // Get existing sections structure
   const existingData = country.sections as { sections?: Array<{ name: string; documents: Array<{ doc_type: string; extracted_text: string }> }> } | null;
   const sectionsArray = existingData?.sections || [];
+  console.log(`[updateCountrySections] Existing sections count: ${sectionsArray.length}`);
   
+  let sectionsUpdated = 0;
   // Update each section with new document
   SECTION_NAMES.forEach((sectionName) => {
     const extractedText = extractedSections[sectionName];
@@ -429,6 +459,7 @@ async function updateCountrySections(
         documents: []
       };
       sectionsArray.push(section);
+      console.log(`[updateCountrySections] Created new section: ${sectionName}`);
     }
     
     // Append new document to section
@@ -436,20 +467,33 @@ async function updateCountrySections(
       doc_type: docType,
       extracted_text: extractedText
     });
+    sectionsUpdated++;
+    console.log(`[updateCountrySections] Added document to section: ${sectionName} (doc_type: ${docType}, text length: ${extractedText.length})`);
   });
   
+  console.log(`[updateCountrySections] Total sections updated: ${sectionsUpdated}`);
+  console.log(`[updateCountrySections] Total sections in array: ${sectionsArray.length}`);
+  
   // Update country record with new sections structure
-  const { error: updateError } = await supabase
+  const { error: updateError, data: updatedData } = await supabase
     .from('countries')
     .update({
       sections: { sections: sectionsArray }
     })
-    .eq('id', country.id);
+    .eq('id', country.id)
+    .select();
   
   if (updateError) {
-    console.error('Error updating country sections:', updateError);
+    console.error('[updateCountrySections] Error updating country sections:', updateError);
     throw new Error(`Failed to update country sections: ${updateError.message}`);
   }
+  
+  if (!updatedData || updatedData.length === 0) {
+    console.error('[updateCountrySections] No data returned from update');
+    throw new Error('Failed to update country sections: No data returned');
+  }
+  
+  console.log(`[updateCountrySections] ✓ Successfully updated country ${countryName} with ${sectionsUpdated} sections`);
 }
 
 // Process uploaded files: parse and extract sections (no storage needed)
@@ -507,7 +551,8 @@ async function processUploadedFiles(files: File[], fileTypes: string[], countryD
           await updateCountrySections(
             countryData.name,
             fileType,
-            extractedSections
+            extractedSections,
+            countryData.id // Pass the country ID directly for more reliable lookup
           );
           
           console.log(`Successfully extracted and stored sections from ${file.name}`);
