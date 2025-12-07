@@ -1,465 +1,742 @@
-# UN PIF Dashboard
+# UN Project Information Form (PIF) Generator
 
-A comprehensive system for generating, editing, and managing UN Project Information Forms (PIFs) using AI-powered agents. This system converts Word documents to JSON, fills them with AI-generated content, and converts them back to Word format.
+A Next.js application for generating, editing, and managing GEF-8 Project Identification Forms (PIFs) using AI-powered document generation and Supabase database integration.
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Project Structure](#project-structure)
+- [Key Features](#key-features)
+- [Technology Stack](#technology-stack)
+- [Getting Started](#getting-started)
+- [Architecture](#architecture)
+- [API Routes](#api-routes)
+- [Components](#components)
+- [Library Functions](#library-functions)
+- [Scripts](#scripts)
+- [Database Schema](#database-schema)
+- [Workflow](#workflow)
 
 ## Overview
 
-The PIF Dashboard uses a multi-agent AI system to:
-- **Generate** complete PIF documents from templates
-- **Edit** specific sections of existing PIF documents
-- **Process** and store reference documents for enhanced AI context
-- **Download** completed PIFs as Word documents
-
-The system works with ProseMirror JSON format internally, which allows for precise formatting control while maintaining compatibility with Word documents.
-
----
-
-## Core APIs
-
-### 1. `/api/process-files` - Upload Files for Agent Context
-
-**Purpose**: Upload PDF/Word documents to the database to provide additional context for AI agents when generating PIF sections.
-
-**How it works**:
-- Accepts multiple files (PDF or DOCX) along with a country name
-- Extracts text from each file using `unpdf`
-- Uses AI subagents to extract section-specific content from each document
-- Stores extracted content in Supabase, organized by country and section
-- When generating PIFs, agents automatically use this stored context
-
-**Request Format**:
-```typescript
-POST /api/process-files
-FormData:
-  - country: string (e.g., "Kenya")
-  - files: File[] (PDF or DOCX files)
-  - fileTypes: string[] (e.g., ["BUR", "BTR", "NC"])
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "processedFiles": [
-    {
-      "fileName": "kenya_bur_2023.pdf",
-      "fileType": "BUR",
-      "success": true
-    }
-  ]
-}
-```
-
-**Key Features**:
-- **Parallel Processing**: All 10 section subagents run simultaneously for speed
-- **Section-Specific Extraction**: Each document is analyzed for content relevant to each PIF section
-- **Database Storage**: Extracted content is stored in Supabase for future use
-- **Automatic Context**: When generating PIFs, the system automatically includes relevant database content
-
-**Usage Tips**:
-- Upload multiple documents per country for richer context
-- Use descriptive file types (BUR, BTR, NC, NDC, etc.) for better organization
-- The more documents you upload, the more accurate and comprehensive the generated PIFs will be
-
----
-
-### 2. `/api/generate-pif` - Generate Complete PIF Documents
-
-**Purpose**: Generate a complete PIF document from a template JSON, filling all sections with AI-generated content.
-
-**How it works**:
-1. Loads the template JSON (`public/pif-template.json`)
-2. For each of the 10 sections:
-   - Extracts the section's JSON structure from the template
-   - Checks the database for relevant context (from uploaded files)
-   - Uses AI to fill the section JSON with country-specific content
-   - Preserves all formatting, tables, and structure
-3. Combines all filled sections into a complete document
-4. Returns the complete ProseMirror JSON
-
-**Request Format**:
-```typescript
-POST /api/generate-pif
-Body: {
-  country: string,
-  templatePath?: string (optional, defaults to "public/pif-template.json")
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "document": {
-    "type": "doc",
-    "content": [ /* ProseMirror JSON */ ]
-  },
-  "sections": [
-    {
-      "sectionName": "GHG Inventory",
-      "source": "database" | "ai",
-      "sources": ["url1", "url2"]
-    }
-  ]
-}
-```
-
-**Key Features**:
-- **Template-Based**: Uses pre-defined JSON template structure
-- **Section Subagents**: Each section is processed by a dedicated AI subagent
-- **Database Integration**: Automatically uses uploaded document context
-- **Format Preservation**: Maintains tables, headings, and all formatting
-- **Source Tracking**: Tracks which sources were used for each section
-
-**Section Processing**:
-- Each section is extracted using pre-computed boundaries
-- AI fills placeholders like `[Country]`, `[...]`, `PROMPT:`, etc.
-- Tables are preserved with all structure (colspan, rowspan, etc.)
-- Standard text sections remain unchanged unless explicitly filled
-
----
-
-### 3. `/api/edit-pif` - Edit Specific PIF Sections
-
-**Purpose**: Edit specific sections of an existing PIF document based on user instructions.
-
-**How it works**:
-1. Receives the current PIF document (as ProseMirror JSON) and edit instructions
-2. Identifies which section(s) need to be edited
-3. Extracts the relevant section JSON from the document
-4. Uses AI to modify only the specified section according to instructions
-5. Merges the edited section back into the document
-6. Returns the updated complete document
-
-**Request Format**:
-```typescript
-POST /api/edit-pif
-Body: {
-  document: ProseMirrorJSON, // Current document
-  sectionName: string, // e.g., "GHG Inventory"
-  editInstructions: string // Natural language instructions
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "document": {
-    "type": "doc",
-    "content": [ /* Updated ProseMirror JSON */ ]
-  }
-}
-```
-
-**Key Features**:
-- **Targeted Editing**: Only modifies the specified section
-- **Instruction-Based**: Uses natural language instructions (e.g., "Add more detail about agriculture sector")
-- **Format Preservation**: Maintains all formatting, tables, and structure
-- **Minimal Changes**: Only changes what's explicitly requested
-- **Section Detection**: Automatically finds section boundaries using heading patterns
-
-**Edit Instructions Examples**:
-- "Add a paragraph about renewable energy initiatives"
-- "Update the budget table with new figures"
-- "Make the executive summary more concise"
-- "Add information about recent policy changes"
-
-**Section Detection**:
-The system uses heading patterns to identify sections:
-- Searches for section headings (e.g., "GHG Inventory Module")
-- Finds section boundaries by looking for next heading of equal/higher level
-- Extracts the complete section JSON for editing
-
----
-
-### 4. `/api/download-pif` - Convert JSON to Word Document
-
-**Purpose**: Convert a ProseMirror JSON document back to a Word (.docx) file for download.
-
-**How it works**:
-1. Receives ProseMirror JSON document
-2. Converts each node type to Word format:
-   - Headings → Word headings (levels 1-6)
-   - Paragraphs → Word paragraphs
-   - Tables → Word tables (with colspan/rowspan support)
-   - Lists → Word bullet/numbered lists
-   - Text formatting → Word formatting (bold, italic, etc.)
-3. Uses `docx` library to generate the Word document
-4. Returns the document as a downloadable file
-
-**Request Format**:
-```typescript
-POST /api/download-pif
-Body: {
-  document: ProseMirrorJSON,
-  fileName?: string (optional, defaults to "PIF_Document.docx")
-}
-```
-
-**Response**: 
-- Binary Word document file (.docx)
-- Content-Type: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
-
-**Key Features**:
-- **Complete Conversion**: Handles all ProseMirror node types
-- **Table Support**: Preserves table structure, colspan, rowspan
-- **Formatting**: Maintains text formatting (bold, italic, etc.)
-- **List Support**: Converts bullet and ordered lists
-- **Heading Levels**: Preserves heading hierarchy (H1-H6)
-
-**Node Type Mappings**:
-- `heading` → Word Heading (level 1-6)
-- `paragraph` → Word Paragraph
-- `table` → Word Table
-- `tableRow` → Word Table Row
-- `tableCell` / `tableHeader` → Word Table Cell
-- `bulletList` → Word Bullet List
-- `orderedList` → Word Numbered List
-- `text` → Word Text Run (with formatting)
-
----
-
-## Section-Specific Instructions
-
-### Customizing Section Prompts
-
-You can provide additional context and formatting instructions for specific sections by editing `lib/section-prompts.ts`.
-
-**How it works**:
-- The system checks if additional context exists for a section
-- If found, it appends the context to the base prompt
-- If not found, it uses only the base instructions
-
-**Current Implementations**:
-- `getInstitutionalFrameworkPrompt()` - Detailed formatting for Institutional Framework section
-- `getNationalPolicyFrameworkPrompt()` - Detailed formatting for National Policy Framework section
-
-**Adding New Section Prompts**:
-
-1. Create a function in `lib/section-prompts.ts`:
-```typescript
-export function getYourSectionPrompt(
-  country: string,
-  cbitInfo: string | null = null,
-  scrapedData?: ScrapedData
-): string {
-  return `
-    Your detailed formatting instructions here...
-    Include structure, tone, formatting requirements, etc.
-  `;
-}
-```
-
-2. Update `getSectionAdditionalContext()` to map your section:
-```typescript
-export function getSectionAdditionalContext(
-  sectionTitle: string,
-  country: string,
-  cbitInfo: string | null = null,
-  scrapedData?: ScrapedData
-): string | null {
-  const normalizedTitle = sectionTitle.toLowerCase().trim();
-  
-  if (normalizedTitle.includes('your section name')) {
-    return getYourSectionPrompt(country, cbitInfo, scrapedData);
-  }
-  
-  // ... existing mappings
-}
-```
-
-**Benefits**:
-- Provides detailed formatting instructions for specific sections
-- Ensures consistency across generated documents
-- Allows for section-specific requirements (e.g., bullet lists, table formats)
-- Can include scraped data and CBIT project information
-
----
-
-## Template Customization
-
-### Changing the PIF Template
-
-If you need to use a different PIF template, you'll need to:
-
-1. **Create a new Word template** (`.docx` file)
-   - Place it in `public/` directory
-   - Follow the same structure as the existing template
-
-2. **Convert DOCX to JSON**:
-   ```bash
-   node scripts/convert-template.cjs
-   ```
-   Or modify `scripts/convert-template.cjs` to point to your new template:
-   ```javascript
-   const TEMPLATE_SOURCE = path.resolve('public/YOUR_TEMPLATE.docx');
-   const TEMPLATE_OUTPUT = path.resolve('public/your-template.json');
-   ```
-
-3. **Update section boundaries**:
-   - The system uses pre-computed section boundaries to extract sections
-   - Run `scripts/find-section-boundaries.cjs` to identify boundaries:
-   ```bash
-   node scripts/find-section-boundaries.cjs
-   ```
-   - Update `SECTION_BOUNDARIES` in both `generate-pif/route.ts` and `edit-pif/route.ts`
-
-4. **Update section names**:
-   - Modify `SECTION_NAMES` array in the API routes to match your template's sections
-
-### DOCX to JSON Conversion Process
-
-The conversion uses:
-- **mammoth**: Converts DOCX to HTML
-- **TipTap**: Converts HTML to ProseMirror JSON
-- **Extensions**: Table, StarterKit for full formatting support
-
-**Conversion Script** (`scripts/convert-template.cjs`):
-```javascript
-// 1. Read DOCX file
-const { value: html } = await mammoth.convertToHtml({ path: TEMPLATE_SOURCE });
-
-// 2. Convert HTML to ProseMirror JSON
-const json = generateJSON(html, [
-  StarterKit,
-  Table.configure({ resizable: true }),
-  TableRow,
-  TableHeader,
-  TableCell,
-]);
-
-// 3. Save JSON
-fs.writeFileSync(TEMPLATE_OUTPUT, JSON.stringify(json, null, 2));
-```
-
-**Important Notes**:
-- The JSON preserves document structure (headings, paragraphs, tables, lists)
-- Tables are converted with full structure (colspan, rowspan)
-- Formatting (bold, italic) is preserved in text nodes
-- Section boundaries must be manually identified after conversion
-
----
-
-## System Architecture
-
-### Multi-Agent System
-
-The system uses three main AI agents:
-
-1. **Decision Agent**: Determines whether to generate a new PIF or edit an existing one
-2. **PIF Generating Agent**: Creates comprehensive new PIF documents
-3. **PIF Editing Agent**: Makes targeted updates to existing documents
-
-### Data Flow
+This application automates the creation of UN Project Information Forms by:
+- Generating PIF documents from templates using AI
+- Extracting and storing country-specific data from uploaded documents
+- Enabling real-time editing of PIF sections
+- Converting documents between ProseMirror JSON and DOCX formats
+- Managing country data in a Supabase database
+
+## Project Structure
 
 ```
-User Request
-    ↓
-Decision Agent (analyzes intent)
-    ↓
-┌─────────────────┬─────────────────┐
-│ Generate Agent  │  Edit Agent     │
-│ (new PIF)       │  (modify PIF)   │
-└─────────────────┴─────────────────┘
-    ↓
-Section Subagents (10 parallel agents)
-    ↓
-Database Context (from uploaded files)
-    ↓
-AI Generation/Editing
-    ↓
-ProseMirror JSON
-    ↓
-Word Document (via download-pif)
+UN_pif/
+├── app/                          # Next.js App Router
+│   ├── api/                      # API Routes
+│   │   ├── chat/                 # Chat interface endpoint
+│   │   ├── download-pif/         # DOCX download endpoint
+│   │   ├── edit-pif/             # PIF editing endpoint
+│   │   ├── generate-pif/         # PIF generation endpoint
+│   │   └── process-files/        # File processing endpoint
+│   ├── layout.tsx                 # Root layout
+│   ├── page.tsx                   # Home page
+│   └── globals.css                # Global styles
+├── components/                    # React Components
+│   ├── ui/                       # Reusable UI components (shadcn/ui)
+│   ├── chat-interface.tsx        # Chat UI component
+│   ├── document-viewer.tsx       # Document display and editing
+│   ├── edit-pif-modal.tsx        # Edit PIF modal dialog
+│   ├── file-upload-modal.tsx     # File upload modal
+│   ├── generation-log.tsx       # Generation progress log
+│   ├── inline-file-upload.tsx   # Inline file upload component
+│   ├── pif-dashboard.tsx         # Main dashboard component
+│   ├── pif-generator-form.tsx   # PIF generation form
+│   ├── rich-text-editor.tsx      # TipTap rich text editor
+│   └── theme-provider.tsx        # Theme context provider
+├── lib/                          # Utility Libraries
+│   ├── countries.ts              # Country database operations
+│   ├── document-converter.ts     # Document format conversion
+│   ├── supabaseClient.ts         # Supabase client configuration
+│   └── utils.ts                  # General utilities
+├── scripts/                      # Utility Scripts
+│   ├── convert-template.cjs      # Convert DOCX template to JSON
+│   ├── find-section-boundaries.cjs
+│   ├── test-extract-section-json.cjs
+│   ├── test-generate-filled-section.cjs
+│   ├── test-process-file-to-db.cjs
+│   ├── test-supabase.cjs
+│   └── test-table-preservation.cjs
+├── public/                       # Static Assets
+│   ├── PIF_template.docx         # Source DOCX template
+│   ├── pif-template.json         # Converted ProseMirror JSON template
+│   └── [other assets]
+├── test-output/                  # Test output files
+├── hooks/                        # React Hooks
+├── styles/                       # Additional styles
+└── [config files]               # TypeScript, Next.js, Tailwind configs
 ```
 
-### Database Structure
+## Key Features
 
-**Countries Table**:
-```typescript
-{
-  id: string,
-  name: string,
-  sections: {
-    sections: [
-      {
-        name: string, // Section name
-        documents: [
-          {
-            doc_type: string, // BUR, BTR, NC, etc.
-            extracted_text: string // AI-extracted content
-          }
-        ]
-      }
-    ]
-  }
-}
-```
+### 1. **AI-Powered PIF Generation**
+- Generates complete PIF documents for any country
+- Uses 10 specialized AI subagents (one per PIF section)
+- Integrates database data with AI-generated content
+- Handles rate limiting and retries automatically
 
----
+### 2. **Document Processing**
+- Upload PDF/DOCX files for country-specific data extraction
+- AI extracts relevant information for each of 10 PIF sections
+- Stores extracted data in Supabase database
+- Reuses stored data for future PIF generations
 
-## Development
+### 3. **Real-Time Editing**
+- Edit specific PIF sections using natural language instructions
+- AI-powered section editing with structure preservation
+- Batch editing of multiple sections
+- Maintains document formatting and tables
+
+### 4. **Document Management**
+- Rich text editor with TipTap/ProseMirror
+- Export to DOCX format
+- Preserves tables, formatting, and structure
+- Real-time document preview
+
+## Technology Stack
+
+### Frontend
+- **Next.js 16** - React framework with App Router
+- **React 19** - UI library
+- **TypeScript** - Type safety
+- **Tailwind CSS** - Styling
+- **TipTap/ProseMirror** - Rich text editing
+- **shadcn/ui** - UI component library
+- **Radix UI** - Accessible component primitives
+
+### Backend
+- **Next.js API Routes** - Serverless API endpoints
+- **OpenAI GPT-4o-mini** - AI text generation
+- **Vercel AI SDK** - AI integration
+- **Supabase** - PostgreSQL database
+- **Mammoth** - DOCX parsing
+- **unpdf** - PDF text extraction
+- **docx** - DOCX generation
+
+### Database
+- **Supabase (PostgreSQL)** - Country data storage
+- Tables: `countries` (id, name, sections)
+
+## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 18+ 
+- npm or yarn
 - Supabase account and project
 - OpenAI API key
 
-### Setup
-```bash
-npm install
-cp .env.example .env
-# Add your Supabase and OpenAI credentials
-npm run dev
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd UN_pif
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   Create a `.env.local` file:
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+   OPENAI_API_KEY=your_openai_api_key
+   ```
+
+4. **Convert template (if needed)**
+   ```bash
+   npm run convert-template
+   ```
+
+5. **Run development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open in browser**
+   Navigate to `http://localhost:3000`
+
+## 🏗 Architecture
+
+### System Flow
+
+```
+User Input (Country Name)
+    ↓
+[PIF Generator Form]
+    ↓
+[File Upload (Optional)] → [Process Files API] → [Extract Sections] → [Store in DB]
+    ↓
+[Generate PIF API] → [10 AI Subagents] → [Fill Template Sections]
+    ↓
+[ProseMirror JSON] → [Document Viewer] → [Rich Text Editor]
+    ↓
+[Edit PIF API] (Optional) → [AI Edit Subagents] → [Updated Document]
+    ↓
+[Download PIF API] → [Convert to DOCX] → [Download File]
 ```
 
-### Key Dependencies
-- `@ai-sdk/openai` - AI model integration
-- `docx` - Word document generation
-- `mammoth` - DOCX to HTML conversion
+### AI Agent Architecture
+
+The system uses a **multi-agent architecture**:
+
+1. **Main Generation Agent** (`/api/generate-pif`)
+   - Orchestrates 10 section subagents
+   - Manages database lookups
+   - Combines section outputs
+
+2. **Section Subagents** (10 parallel agents)
+   - Each handles one PIF section
+   - Checks database first
+   - Generates content with AI if needed
+   - Sections: GHG Inventory, Climate Transparency, Adaptation and Vulnerability, NDC Tracking, Institutional Framework, National Policy Framework, Support Needed and Received, Key Barriers, Other Baseline Initiatives, Official Reporting to the UNFCCC
+
+3. **File Processing Agents** (`/api/process-files`)
+   - 10 extraction subagents (one per section)
+   - Extract relevant content from uploaded documents
+   - Store in database for future use
+
+4. **Edit Agents** (`/api/edit-pif`)
+   - Section-specific edit subagents
+   - Preserve document structure
+   - Apply user instructions
+
+5. **Chat Agent** (`/api/chat`)
+   - Conversational interface
+   - Decision agent for routing requests
+   - Database lookup agent
+
+## API Routes
+
+### `/api/generate-pif` (POST)
+Generates a complete PIF document for a country.
+
+**Request:**
+```typescript
+FormData {
+  country: string
+}
+```
+
+**Response:**
+```typescript
+{
+  document: ProseMirrorJSON,  // Filled template
+  title: string,
+  country: string,
+  hasDatabaseData: boolean,
+  logEntries: LogEntry[]
+}
+```
+
+**Key Functions:**
+- `generateNewPIF()` - Main generation orchestrator
+- `processSectionSubagent()` - Processes one section
+- `generateFilledSectionJSON()` - AI generation for section
+- `extractSectionJSON()` - Extracts section from template
+- `replaceCountryPlaceholders()` - Replaces [Country] placeholders
+
+---
+
+### `/api/edit-pif` (POST)
+Edits specific sections of an existing PIF document.
+
+**Request:**
+```typescript
+{
+  proseMirrorJson: ProseMirrorJSON,
+  sections: string[],  // Section names to edit
+  editInstructions: string
+}
+```
+
+**Response:**
+```typescript
+{
+  document: ProseMirrorJSON,  // Updated document
+  title: string,
+  successfulEdits: string[],
+  failedEdits: string[]
+}
+```
+
+**Key Functions:**
+- `editPIFDocument()` - Main edit orchestrator
+- `processSectionEdit()` - Processes one section edit
+- `editSectionJSON()` - AI editing for section
+- `extractSectionJSON()` - Finds section in document
+
+---
+
+### `/api/download-pif` (POST)
+Converts ProseMirror JSON to DOCX and returns as download.
+
+**Request:**
+```typescript
+{
+  proseMirrorJson: ProseMirrorJSON,
+  filename?: string
+}
+```
+
+**Response:**
+- DOCX file (binary)
+
+**Key Functions:**
+- `convertProseMirrorToDocx()` - Main conversion
+- `convertNodeToDocx()` - Converts ProseMirror nodes
+- `convertTableToDocx()` - Handles table conversion
+- `convertListToDocx()` - Handles list conversion
+
+---
+
+### `/api/process-files` (POST)
+Processes uploaded files and extracts section-specific content.
+
+**Request:**
+```typescript
+FormData {
+  country: string,
+  files: File[],
+  fileTypes: string[]
+}
+```
+
+**Response:**
+```typescript
+{
+  success: boolean,
+  country: string,
+  processedFiles: ProcessedFile[],
+  countryData: CountryRecord
+}
+```
+
+**Key Functions:**
+- `processUploadedFiles()` - Main file processor
+- `parseDocumentAndExtractSections()` - Extracts all sections
+- `extractSectionContent()` - AI extraction for one section
+- `updateCountrySections()` - Stores in database
+
+---
+
+### `/api/chat` (POST)
+Handles conversational chat interface with document generation routing.
+
+**Request:**
+```typescript
+FormData | JSON {
+  messages: Message[],
+  document?: ProseMirrorJSON,
+  files?: File[],
+  fileTypes?: string[],
+  originalMessage?: string,
+  skipFiles?: boolean,
+  country?: string
+}
+```
+
+**Response:**
+- Various response types based on action:
+  - `database_lookup` - Database query results
+  - `file_upload_question` - Asks for file upload
+  - `database_lookup_status` - Database status
+  - `document_update` - Generated/edited document
+  - `file_upload_success` - File processing complete
+  - Streaming text response for chat
+
+**Key Functions:**
+- `getChatResponse()` - Chat agent response
+- `shouldProcessDocument()` - Decision agent
+- `generateNewPIF()` - PIF generation
+- `editExistingPIF()` - PIF editing
+- `processUploadedFiles()` - File processing
+
+## Components
+
+### `PifDashboard`
+**Location:** `components/pif-dashboard.tsx`
+
+Main dashboard component that orchestrates the entire application.
+
+**Props:**
+- None (root component)
+
+**State:**
+- `editorContent` - Current ProseMirror JSON
+- `document` - Document metadata
+- `isLoadingTemplate` - Template loading state
+- `logEntries` - Generation/edit log entries
+
+**Key Functions:**
+- `handleDocumentChange()` - Updates document state
+- `handleDocumentGenerated()` - Handles new PIF generation
+- `handleAddLogEntry()` - Adds log entries
+
+**Child Components:**
+- `PifGeneratorForm` (left panel)
+- `DocumentViewer` (right panel)
+
+---
+
+### `PifGeneratorForm`
+**Location:** `components/pif-generator-form.tsx`
+
+Form for generating new PIF documents.
+
+**Props:**
+- `onDocumentGenerated: (document) => void`
+- `onAddLogEntry?: (entry) => void`
+- `externalLogEntries?: LogEntry[]`
+
+**State:**
+- `country` - Country name input
+- `files` - Uploaded files
+- `fileTypes` - File type labels
+- `status` - Current operation status
+- `logEntries` - Generation log
+
+**Key Functions:**
+- `handleSubmit()` - Submits generation request
+- `handleFilesChange()` - Updates file list
+
+**Workflow:**
+1. User enters country name
+2. Optional: Upload reference files
+3. Files processed → Database updated
+4. PIF generation → AI fills template
+5. Document displayed in viewer
+
+---
+
+### `DocumentViewer`
+**Location:** `components/document-viewer.tsx`
+
+Displays and manages PIF document viewing/editing.
+
+**Props:**
+- `title?: string`
+- `content: ProseMirrorJSON | null`
+- `onDocumentChange?: (json) => void`
+- `onAddLogEntry?: (entry) => void`
+
+**State:**
+- `isDownloading` - Download state
+- `isSubmittingEdit` - Edit submission state
+
+**Key Functions:**
+- `handleEditSubmit()` - Submits section edits
+- `handleDownload()` - Downloads DOCX file
+
+**Child Components:**
+- `RichTextEditor` - Document editor
+- `EditPifModal` - Edit dialog
+
+---
+
+### `RichTextEditor`
+**Location:** `components/rich-text-editor.tsx`
+
+TipTap-based rich text editor for ProseMirror JSON.
+
+**Features:**
+- Full rich text editing
+- Table support
+- Formatting options
+- Real-time updates
+
+---
+
+### `EditPifModal`
+**Location:** `components/edit-pif-modal.tsx`
+
+Modal dialog for editing PIF sections.
+
+**Features:**
+- Section selection
+- Edit instructions input
+- Progress tracking
+
+---
+
+### `InlineFileUpload`
+**Location:** `components/inline-file-upload.tsx`
+
+File upload component with type selection.
+
+**Features:**
+- Multiple file upload
+- File type categorization
+- Drag and drop support
+
+---
+
+### `GenerationLog`
+**Location:** `components/generation-log.tsx`
+
+Displays generation and edit progress logs.
+
+**Features:**
+- Real-time log updates
+- Section-by-section progress
+- Source tracking
+- Database hit indicators
+
+---
+
+### `ChatInterface`
+**Location:** `components/chat-interface.tsx`
+
+Conversational interface for PIF generation.
+
+**Features:**
+- Natural language input
+- Document generation routing
+- Database queries
+- File upload integration
+
+## 📚 Library Functions
+
+### `lib/countries.ts`
+Country database operations.
+
+**Functions:**
+- `getCountryByName(name: string)` - Fetches country by name (case-insensitive)
+- `getCountrySection(name: string, sectionKey: string)` - Gets specific section
+- `normalizeCountryName(name: string)` - Normalizes country name
+
+**Types:**
+```typescript
+interface CountryRecord {
+  id: number
+  name: string
+  sections: Record<string, unknown> | null
+}
+```
+
+---
+
+### `lib/document-converter.ts`
+Document format conversion utilities.
+
+**Functions:**
+- `convertDocumentToProseMirror(doc)` - Converts legacy format to ProseMirror JSON
+- `convertProseMirrorToDocument(json)` - Converts ProseMirror JSON to legacy format (backwards compatibility)
+
+**Note:** The application primarily uses ProseMirror JSON format. Legacy conversion functions are for compatibility.
+
+---
+
+### `lib/supabaseClient.ts`
+Supabase client configuration.
+
+**Exports:**
+- `supabase` - Configured Supabase client instance
+
+**Environment Variables:**
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+---
+
+### `lib/utils.ts`
+General utility functions (likely includes Tailwind class merging, etc.)
+
+## 🔧 Scripts
+
+### `scripts/convert-template.cjs`
+Converts the DOCX template to ProseMirror JSON format.
+
+**Usage:**
+```bash
+npm run convert-template
+```
+
+**Process:**
+1. Reads `public/PIF_template.docx`
+2. Converts to HTML using Mammoth
+3. Converts HTML to ProseMirror JSON using TipTap
+4. Writes to `public/pif-template.json`
+
+**Dependencies:**
+- `mammoth` - DOCX to HTML
 - `@tiptap/html` - HTML to ProseMirror JSON
-- `unpdf` - PDF text extraction
-- `supabase` - Database client
-
-### Scripts
-- `scripts/convert-template.cjs` - Convert DOCX template to JSON
-- `scripts/find-section-boundaries.cjs` - Identify section boundaries in template
-- `scripts/test-*.cjs` - Various test scripts for components
+- TipTap extensions (StarterKit, Table, etc.)
 
 ---
 
-## Best Practices
+### `scripts/find-section-boundaries.cjs`
+Analyzes template to find section boundaries (start/end indices).
 
-1. **Upload Multiple Documents**: More context = better PIFs
-2. **Use Descriptive File Types**: Helps organize and reference documents
-3. **Test Section Boundaries**: After changing templates, verify section extraction
-4. **Monitor AI Responses**: Check generated content for accuracy
-5. **Preserve Template Structure**: Don't modify template JSON structure manually
-6. **Use Section Prompts**: Add detailed instructions for sections that need specific formatting
+**Purpose:** Pre-computes section boundaries for efficient extraction.
 
 ---
 
-## Troubleshooting
+### `scripts/test-*.cjs`
+Various test scripts for:
+- Section extraction
+- Filled section generation
+- File processing to database
+- Supabase connectivity
+- Table preservation
 
-### Section Not Generating
-- Check section boundaries in `SECTION_BOUNDARIES`
-- Verify section name matches exactly
-- Check database for relevant context
+## 🗄 Database Schema
 
-### Formatting Issues
-- Ensure template JSON structure is preserved
-- Check table structure (colspan/rowspan)
-- Verify heading levels
+### `countries` Table
 
-### Database Context Not Used
-- Check file upload was successful
-- Verify country name matches exactly
-- Check section name mapping in database
+```sql
+CREATE TABLE countries (
+  id SERIAL PRIMARY KEY,
+  name TEXT UNIQUE NOT NULL,
+  sections JSONB
+);
+```
 
----
+**Structure:**
+- `id` - Primary key
+- `name` - Country name (unique)
+- `sections` - JSONB structure:
 
-## License
+```typescript
+{
+  sections: [
+    {
+      name: string,  // Section name (e.g., "GHG Inventory")
+      documents: [
+        {
+          doc_type: string,  // Document type (e.g., "BUR", "NC")
+          extracted_text: string  // AI-extracted content
+        }
+      ]
+    }
+  ]
+}
+```
+## Workflow
 
-[Your License Here]
+### PIF Generation Workflow
+
+1. **User Input**
+   - User enters country name in `PifGeneratorForm`
+   - Optionally uploads reference documents
+
+2. **File Processing** (if files uploaded)
+   - Files sent to `/api/process-files`
+   - PDF/DOCX parsed to extract text
+   - 10 AI subagents extract section-specific content
+   - Content stored in Supabase `countries` table
+
+3. **PIF Generation**
+   - Request sent to `/api/generate-pif`
+   - Template loaded from `public/pif-template.json`
+   - Database checked for country data
+   - 10 AI subagents process sections in batches:
+     - Extract section JSON from template
+     - Check database for section data
+     - Generate filled section with AI (using database data if available)
+     - Replace country placeholders
+   - Sections combined into complete document
+   - ProseMirror JSON returned
+
+4. **Document Display**
+   - Document displayed in `DocumentViewer`
+   - `RichTextEditor` renders ProseMirror JSON
+   - User can view and edit
+
+5. **Editing** (optional)
+   - User selects sections to edit
+   - Provides edit instructions
+   - Request sent to `/api/edit-pif`
+   - AI subagents edit specified sections
+   - Updated document returned
+
+6. **Download** (optional)
+   - User clicks download button
+   - Request sent to `/api/download-pif`
+   - ProseMirror JSON converted to DOCX
+   - File downloaded
+
+### File Processing Workflow
+
+1. **File Upload**
+   - User uploads PDF/DOCX files
+   - Files sent to `/api/process-files`
+
+2. **Text Extraction**
+   - PDF: `unpdf` extracts text
+   - DOCX: `mammoth` converts to HTML, then to text
+
+3. **Section Extraction**
+   - 10 AI subagents run in parallel
+   - Each extracts content relevant to its section
+   - Uses prompt: "Extract ALL relevant information for [Section Name]"
+
+4. **Database Storage**
+   - Extracted content stored in `countries.sections`
+   - Structure: `sections[].documents[]`
+   - Each document includes `doc_type` and `extracted_text`
+
+5. **Future Use**
+   - Stored data used in PIF generation
+   - AI uses database content as primary source
+   - Fills gaps with web knowledge
+
+## Key Concepts
+
+### ProseMirror JSON Format
+The application uses ProseMirror JSON as the primary document format:
+- Preserves structure (headings, paragraphs, tables, lists)
+- Maintains formatting (bold, italic, etc.)
+- Supports complex structures (tables with colspan/rowspan)
+- Compatible with TipTap editor
+
+### Section Boundaries
+Pre-computed section boundaries in template:
+- Each section has `start` and `end` indices
+- Allows efficient section extraction
+- Defined in `SECTION_BOUNDARIES` constant
+
+### AI Subagent Pattern
+- Each section processed by dedicated subagent
+- Subagents run in batches (2 at a time) to avoid rate limits
+- Each subagent:
+  1. Extracts section from template
+  2. Checks database
+  3. Generates/edits with AI
+  4. Returns filled section
+
+### Rate Limiting Handling
+- Exponential backoff for rate limit errors
+- Retry logic (max 5 attempts)
+- Batch processing to reduce API calls
+- Uses `gpt-4o-mini` for better rate limits
+
+## Testing
+
+Test scripts available in `scripts/`:
+- `test-supabase.cjs` - Database connectivity
+- `test-extract-section-json.cjs` - Section extraction
+- `test-generate-filled-section.cjs` - AI generation
+- `test-process-file-to-db.cjs` - File processing
+- `test-table-preservation.cjs` - Table formatting
+
+## Notes
+
+- Template conversion required before first use: `npm run convert-template`
+- OpenAI API key required for AI features
+- Supabase database must be set up with `countries` table
+- Rate limits handled automatically with retries
+- Document format: ProseMirror JSON (preserves tables and formatting)
+- Export format: DOCX (via `docx` library)
 
