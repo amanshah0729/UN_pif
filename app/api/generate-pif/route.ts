@@ -102,9 +102,10 @@ Your job is to fill out the "${sectionName}" section accurately for ${country}.
 
 ${databaseContent ? `- Use the database data provided above as your PRIMARY source
 - Fill in any gaps or missing information using your knowledge of ${country} and climate transparency frameworks` : `- Generate comprehensive content based on your knowledge of ${country} and climate transparency frameworks`}
-- Fill in all placeholders (like "[…]", "[XXX words]", "PROMPT:", "[….]", etc.) with actual content
+- Fill in all placeholders (like "[…]", "[XXX words]", "PROMPT:", "[….]" etc.) with actual content
 - Fill out ALL tables completely - add rows with actual data, fill in all table cells
 - Replace "{Country}" or "[Country]" with "${country}"
+- Replace "{Date}" with specific dates related to the context of the sentence
 - Maintain ALL formatting, structure, tables, headings, and JSON structure exactly as provided
 - Keep all "STANDARD TEXT TO BE INCLUDED" and "STANDARD TEXT TO BE INCLUDED END" sections exactly as-is
 - Preserve all table structure (tableRow, tableHeader, colspan, rowspan, etc.)
