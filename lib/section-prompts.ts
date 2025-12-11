@@ -260,6 +260,98 @@ Ensure that the CBIT project's contributions to the policy framework are natural
 }
 
 /**
+ * Generate prompt for "Other Key Stakeholders for Climate Action" section
+ */
+export function getOtherKeyStakeholdersPrompt(
+  country: string,
+  cbitInfo: string | null = null,
+  scrapedData?: ScrapedData
+): string {
+  let otherKeyStakeholdersInstructions = `
+
+Write the section "Other Key Stakeholders for Climate Action" for ${country} following the official GEF8 PIF format.
+
+
+Extract non-government stakeholders and leverageable activities for {Country} from authoritative sources. PRIMARY: UNFCCC reports (NCs, BURs, BTRs) country pages; SECONDARY: PATPA, ICAT, NDC Partnership, GEF CBIT, official MRV/ministry pages.
+        For EACH stakeholder category below, output entries as SEPARATE BULLETS using this exact format:
+- Name: Existing activities
+
+RULES:
+- Max 8 entries per category.
+- Each bullet = ONE entity only.
+- "existing_activities" must be ≤200 chars, concise, factual, climate-relevant.
+- Deduplicate entities across ALL categories.
+- No marketing language. No filler.
+- Activities must directly mention climate mitigation, adaptation, MRV, data, transparency, sector actions, or capacity-building.
+
+===========================
+REQUIRED CATEGORIES
+===========================
+
+1. Civil Society (CSOs and NGOs)
+   - Name: Existing activities
+
+2. Private sector
+   - Name: Existing activities
+
+3. Academia and research organizations
+   - Name: Existing activities
+
+4. Financial institutions / MDBs
+   - Name: Existing activities
+
+5. International organizations
+   - Name: Existing activities
+
+6. [Other – to be specified]
+   - Name: Existing activities
+each 'existing_activities' value ≤200 chars; deduplicate by name; concise and factual (no marketing language). Be pretty descriptive in the activities and its direct relevance.
+`;
+
+  // Add scraped UNFCCC data if available
+  if (scrapedData?.institutional) {
+    otherKeyStakeholdersInstructions += `\n\n**IMPORTANT: Extracted UNFCCC Data**
+
+The following text was extracted from UNFCCC reports (BUR, BTR, NDC, NC) for ${country}. You MUST use this as the primary source of information and base your section on this extracted data:
+
+
+
+${scrapedData.institutional}
+
+
+
+Use this extracted data to inform the stakeholders, their roles, and their contributions to climate action. Ensure all information aligns with what was extracted from the official UNFCCC documents.`;
+  }
+
+  // Add CBIT information if available
+  if (cbitInfo) {
+    otherKeyStakeholdersInstructions += `\n\n**IMPORTANT: CBIT Project Information**
+
+The following information is from a previous CBIT project for ${country}. You MUST incorporate relevant details from this CBIT project into the section, particularly:
+
+- Any stakeholders that were engaged or strengthened through the CBIT project
+
+- Capacity-building activities involving non-governmental stakeholders and their impact
+
+- Partnerships and coordination mechanisms developed under CBIT
+
+- Stakeholder involvement in MRV systems or transparency mechanisms created through CBIT support
+
+
+
+CBIT Project Information:
+
+${cbitInfo}
+
+
+
+Ensure that the CBIT project's stakeholder engagement and partnerships are naturally integrated into the section narrative.`;
+  }
+
+  return otherKeyStakeholdersInstructions;
+}
+
+/**
  * Get additional context for a section if available
  * Returns the additional context string or null if no context is available
  */
@@ -279,6 +371,10 @@ export function getSectionAdditionalContext(
   
   if (normalizedTitle.includes('national policy') || normalizedTitle.includes('national policy framework')) {
     return getNationalPolicyFrameworkPrompt(country, cbitInfo, scrapedData);
+  }
+  
+  if (normalizedTitle.includes('other key stakeholders') || normalizedTitle.includes('key stakeholders for climate action')) {
+    return getOtherKeyStakeholdersPrompt(country, cbitInfo, scrapedData);
   }
   
   // No additional context available for this section
